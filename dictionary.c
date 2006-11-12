@@ -27,6 +27,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <malloc.h>
+#include <ctype.h>
 #include "dictionary.h"
 
 struct gniggle_dictionary_hash_e {
@@ -51,7 +52,7 @@ struct gniggle_dictionary_iter {
 bool gniggle_dictionary_word_qualifies(const unsigned char *word, 
 					const int maxlen)
 {
-	int i, len = strlen(word);
+	int i, len = strlen((char *)word);
 	
 	/* Word is at least three characters long */
 	if (len < 3)
@@ -66,7 +67,7 @@ bool gniggle_dictionary_word_qualifies(const unsigned char *word,
 	
 	/* Word is entirely lower-case */
 	for (i = 0; i < len; i++)
-		if (toupper(word[i]) == word[i])
+		if (isupper(word[i]))
 			return false;
 	
 	/* Word is made up only of letters (no punctuation) */
@@ -87,10 +88,9 @@ bool gniggle_dictionary_word_qualifies(const unsigned char *word,
 	return true;	
 }
 
-static unsigned int gniggle_dictionary_fnv(const char *word)
+static unsigned int gniggle_dictionary_fnv(const unsigned char *word)
 {
 	unsigned int z = 0x01000193;
-	const char *start = word;
 
 	if (word == NULL)
 		return 0;
@@ -146,7 +146,7 @@ void gniggle_dictionary_add(struct gniggle_dictionary *dict,
 		unsigned int hash = gniggle_dictionary_fnv(word);
 		unsigned int bucket = hash % (dict->hashsize);
 		
-		e->word = strdup(word);
+		e->word = (unsigned char *)strdup((char *)word);
 		e->next = dict->hash[bucket];
 		dict->hash[bucket] = e;
 	}
