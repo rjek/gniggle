@@ -34,6 +34,9 @@ struct gniggle_dictionary_iter;
 /* returns a new string where any letters following Qs have been removed */
 unsigned char *gniggle_dictionary_trim_qu(const unsigned char *word);
 
+/* returns a new string where any Qs are replaced with QU */
+unsigned char *gniggle_dictionary_restore_qu(const unsigned char *word);
+
 /* returns true if a word can be considered a legal play should the letters
  * be available
  */

@@ -26,6 +26,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <malloc.h>
+#include <stdio.h>
 #include "dictionary.h"
 #include "solve.h"
 
@@ -49,3 +50,94 @@ bool gniggle_solve_sufficent_letters(struct gniggle_dictionary *dict,
 	return true;
 }
 
+#define GRID(ROW,COL) grid[((ROW) * width) + (COL)]
+
+static bool gniggle_solve_look(unsigned char *word, unsigned char *grid,
+				unsigned int width, unsigned int height,
+				unsigned int x, unsigned int y)
+{
+	unsigned char eaten;
+	signed int sx, sy;
+	
+	if (word[0] == '\0')
+		return true;
+
+	eaten = GRID(x, y);
+	GRID(x, y) = '-';	
+	
+	for (sx = -1; sx < 2; sx++) {
+		for (sy = -1; sy < 2; sy++) {
+			if ( (x + sx >= 0) && (y + sy >= 0) 
+				&& (x + sx <= width)
+				&& (y + sy <= height)
+			   ) {
+				if (GRID(x + sx, y + sy) == word[0]) {
+					if (gniggle_solve_look(word + 1, grid,
+						width, height,
+						x + sx, y + sy)	== true) {
+						return true;
+					}
+				}
+			}
+		}
+	}
+	
+	GRID(x, y) = eaten;
+	
+	return false;
+}
+
+bool gniggle_solve_word_on_grid(const unsigned char *word,
+				const unsigned char *grid,
+				const unsigned int width,
+				const unsigned int height)
+{
+	unsigned char firstchar = word[0];
+	unsigned char *wordc = (unsigned char *)strdup((char *)(word + 1));
+	unsigned char *gridc = (unsigned char *)strdup((char *)grid);
+	int x, y;
+	
+	for (x = 0; x < width; x++) {
+		for (y = 0; y < height; y++) {
+			if (GRID(x, y) == firstchar) {
+				if (gniggle_solve_look(wordc, gridc,
+					width, height, x, y) == true) {
+					free(wordc);
+					free(gridc);
+					return true;	
+				}
+			}
+		}
+	}
+	
+	free(wordc);
+	free(gridc);
+	
+	return false;
+}
+
+#ifdef TEST_RIG
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char *argv[]) {
+ 
+	unsigned int width, height;
+	unsigned char *grid;
+	unsigned char word[BUFSIZ];
+	
+	width = (unsigned int)atoi(argv[1]);
+	height = (unsigned int)atoi(argv[2]);
+	grid = (unsigned char *)argv[3];
+	
+	while (scanf("%s", word) == 1) {
+		bool found = gniggle_solve_word_on_grid(
+			word, grid, width, height);
+		if (found)
+			printf("%s\n", word);
+			
+	}
+	
+	return 0;
+}
+#endif

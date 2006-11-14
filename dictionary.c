@@ -64,6 +64,34 @@ inline unsigned char *gniggle_dictionary_trim_qu(const unsigned char *word)
 	return r;
 }
 
+inline unsigned char *gniggle_dictionary_restore_qu(const unsigned char *word)
+{
+	int qs = 0, i;
+	unsigned char *r;
+	unsigned char *b;
+	
+	for (i = 0; i < strlen((char *)word); i++)
+		if (word[i] == 'q')
+			qs++;
+	
+	if (qs == 0)
+		return strdup((char *)word);
+	
+	r = calloc(strlen((char *)word) + qs + 1);
+	
+	b = r;
+	for (i = 0; i < strlen((char *)word); i++) {
+		*b = word[i];
+		if (*b == 'q') {
+			*(b + 1) = 'u';
+			b++;
+		}
+		b++;
+	}
+	
+	return r;
+}
+
 bool gniggle_dictionary_word_qualifies(const unsigned char *word, 
 					const int maxlen)
 {
