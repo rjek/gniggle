@@ -49,14 +49,45 @@ struct gniggle_dictionary_iter {
 	struct gniggle_dictionary_hash_e *entry; /* last hash entry */	
 };
 
+unsigned char *gniggle_dictionary_trim_qu(const unsigned char *word)
+{
+	int i, len = strlen(word);
+	unsigned char *r = calloc(len + 1, 1);
+	unsigned char *p = r;
+	
+	for (i = 0; i < strlen(word); i++) {
+		*p++ = word[i];
+		if (word[i] == 'q')
+			i++;
+	}
+	
+	return r;
+}
+
 bool gniggle_dictionary_word_qualifies(const unsigned char *word, 
 					const int maxlen)
 {
-	int i, len = strlen((char *)word);
+	unsigned char *c = (unsigned char *)strdup((char *)word);
+	unsigned char *qu;
+	int i, len = strlen((char *)c);
 	
 	/* Word is at least three characters long */
 	if (len < 3)
 		return false;
+		
+	/* Word is entirely lower-case */
+	for (i = 0; i < len; i++)
+		if (isupper(word[i]))
+			return false;
+			
+	/* If word contains a Q, it is followed by a U */
+	for (i = 0; i < len; i++)
+		if (word[i] == 'q' && word[i + 1] != 'u')
+			return false;
+	
+	/* Convert qu to just q when considering other tests */
+	qu = gniggle_dictionary_trim_qu(word);
+	len = strlen(qu);
 	
 	/* Word is not longer than the maximum length (which is the total
 	 * number of letters on the board, if by some marvel they can all be
@@ -65,24 +96,10 @@ bool gniggle_dictionary_word_qualifies(const unsigned char *word,
 	if (len > maxlen)
 		return false;
 	
-	/* Word is entirely lower-case */
-	for (i = 0; i < len; i++)
-		if (isupper(word[i]))
-			return false;
-	
+
 	/* Word is made up only of letters (no punctuation) */
 	for (i = 0; i < len; i++)
 		if (isalpha(word[i]) == 0)
-			return false;
-	
-	/* If word contains a Q, it is followed by a U */
-	for (i = 0; i < len; i++)
-		if (word[i] == 'q' && word[i + 1] != 'u')
-			return false;
-	
-	/* Word has no hypens */
-	for (i = 0; i < len; i++)
-		if (word[i] == '-')
 			return false;
 	
 	return true;	

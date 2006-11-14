@@ -45,7 +45,7 @@ bool gniggle_solve_sufficent_letters(struct gniggle_dictionary *dict,
 		*o = '-';
 	}
 	
-	free(letters);
-	
+	free(letters);	
 	return true;
 }
+
