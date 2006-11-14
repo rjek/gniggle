@@ -68,8 +68,8 @@ static bool gniggle_solve_look(unsigned char *word, unsigned char *grid,
 	for (sx = -1; sx < 2; sx++) {
 		for (sy = -1; sy < 2; sy++) {
 			if ( (x + sx >= 0) && (y + sy >= 0) 
-				&& (x + sx <= width)
-				&& (y + sy <= height)
+				&& (x + sx < width)
+				&& (y + sy < height)
 			   ) {
 				if (GRID(x + sx, y + sy) == word[0]) {
 					if (gniggle_solve_look(word + 1, grid,
