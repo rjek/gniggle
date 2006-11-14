@@ -30,8 +30,7 @@
 #include "dictionary.h"
 #include "solve.h"
 
-bool gniggle_solve_sufficent_letters(struct gniggle_dictionary *dict,
-					const unsigned char *word,
+bool gniggle_solve_sufficent_letters(const unsigned char *word,
 					const unsigned char *grid)
 {
 	unsigned char *letters = (unsigned char *)strdup((char *)grid);
@@ -93,9 +92,15 @@ bool gniggle_solve_word_on_grid(const unsigned char *word,
 				const unsigned int height)
 {
 	unsigned char firstchar = word[0];
-	unsigned char *wordc = (unsigned char *)strdup((char *)(word + 1));
-	unsigned char *gridc = (unsigned char *)strdup((char *)grid);
+	unsigned char *wordc;
+	unsigned char *gridc;
 	int x, y;
+	
+	if (gniggle_solve_sufficent_letters(word, grid) == false)
+		return false;
+		
+	wordc = (unsigned char *)strdup((char *)(word + 1));
+	gridc = (unsigned char *)strdup((char *)grid);
 	
 	for (x = 0; x < width; x++) {
 		for (y = 0; y < height; y++) {

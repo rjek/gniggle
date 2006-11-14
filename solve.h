@@ -30,11 +30,10 @@
 #include "dictionary.h"
 
 /* returns true if there are sufficent letters on the grid for a specific
- * word.  It does not check if the word is a valid play, simply if it's possible
- * for it to be so
+ * word.  It does not check if the word is a valid play, simply if it's
+ * possible for it to be so
  */
-bool gniggle_solve_sufficent_letters(struct gniggle_dictionary *dict,
-					const unsigned char *word,
+bool gniggle_solve_sufficent_letters(const unsigned char *word,
 					const unsigned char *grid);
 
 /* returns true if 'word' is on the grid represented by the string 'grid'.  The
