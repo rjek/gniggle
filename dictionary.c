@@ -49,7 +49,7 @@ struct gniggle_dictionary_iter {
 	struct gniggle_dictionary_hash_e *entry; /* last hash entry */	
 };
 
-unsigned char *gniggle_dictionary_trim_qu(const unsigned char *word)
+inline unsigned char *gniggle_dictionary_trim_qu(const unsigned char *word)
 {
 	int i, len = strlen(word);
 	unsigned char *r = calloc(len + 1, 1);
@@ -96,7 +96,6 @@ bool gniggle_dictionary_word_qualifies(const unsigned char *word,
 	if (len > maxlen)
 		return false;
 	
-
 	/* Word is made up only of letters (no punctuation) */
 	for (i = 0; i < len; i++)
 		if (isalpha(word[i]) == 0)
@@ -105,7 +104,7 @@ bool gniggle_dictionary_word_qualifies(const unsigned char *word,
 	return true;	
 }
 
-static unsigned int gniggle_dictionary_fnv(const unsigned char *word)
+static inline unsigned int gniggle_dictionary_fnv(const unsigned char *word)
 {
 	unsigned int z = 0x01000193;
 
