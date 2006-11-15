@@ -77,7 +77,7 @@ inline unsigned char *gniggle_dictionary_restore_qu(const unsigned char *word)
 	if (qs == 0)
 		return strdup((char *)word);
 	
-	r = calloc(strlen((char *)word) + qs + 1);
+	r = calloc(strlen((char *)word) + qs + 1, 1);
 	
 	b = r;
 	for (i = 0; i < strlen((char *)word); i++) {
