@@ -67,32 +67,4 @@ unsigned char *gniggle_generate_simple(const unsigned char *distribution,
  */
 unsigned char *gniggle_generate_real(unsigned int width, unsigned int height);
 
-/* letter arrangements for real Boggle cubes
- *
- *    1. A E A N E G      9. W N G E E H
- *    2. A H S P C O     10. L N H N R Z
- *    3. A S P F F K     11. T S T I Y D
- *    4. O B J O A B     12. O W T O A T
- *    5. I O T M U C     13. E R T T Y L
- *    6. R Y V D E L     14. T O E S S I
- *    7. L R E I X D     15. T E R W H V
- *    8. E I U N E S     16. N U I H M Qu
- */
- 
-#define GNIGGLE_CUBE1 "aeaneg"
-#define GNIGGLE_CUBE2 "ahspco"
-#define GNIGGLE_CUBE3 "aspffk"
-#define GNIGGLE_CUBE4 "objoab"
-#define GNIGGLE_CUBE5 "iotmuc"
-#define GNIGGLE_CUBE6 "ryvdel"
-#define GNIGGLE_CUBE7 "lreixd"
-#define GNIGGLE_CUBE8 "eiunes"
-#define GNIGGLE_CUBE9 "wngeeh"
-#define GNIGGLE_CUBE10 "lnhnrz"
-#define GNIGGLE_CUBE11 "tstiyd"
-#define GNIGGLE_CUBE12 "owtoat"
-#define GNIGGLE_CUBE13 "erttyl"
-#define GNIGGLE_CUBE15 "terwhv"
-#define GNIGGLE_CUBE16 "nuihmq"
-
 #endif /* __GENERATE_H__ */
