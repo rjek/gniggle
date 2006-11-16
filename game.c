@@ -93,6 +93,11 @@ void gniggle_game_delete(struct gniggle_game *game)
 	free(game);
 }
 
+static int gniggle_game_answers_sort(const void *p1, const void *p2)
+{
+	return strcmp(* (char * const *) p1, * (char * const *) p2);
+}
+
 const unsigned char **gniggle_game_get_answers(struct gniggle_game *game)
 {
 	/* we allocate enough space for 64 words, including the sentinal.
@@ -121,6 +126,8 @@ const unsigned char **gniggle_game_get_answers(struct gniggle_game *game)
 	}
 	
 	r[found] = NULL;
+	
+	qsort(r, found, sizeof(char *), gniggle_game_answers_sort);
 	
 	free(iter);
 	
