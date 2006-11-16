@@ -95,9 +95,8 @@ inline unsigned char *gniggle_dictionary_restore_qu(const unsigned char *word)
 bool gniggle_dictionary_word_qualifies(const unsigned char *word, 
 					const int maxlen)
 {
-	unsigned char *c = (unsigned char *)strdup((char *)word);
 	unsigned char *qu;
-	int i, len = strlen((char *)c);
+	int i, len = strlen((char *)word);
 	
 	/* Word is at least three characters long */
 	if (len < 3)
@@ -112,22 +111,23 @@ bool gniggle_dictionary_word_qualifies(const unsigned char *word,
 	for (i = 0; i < len; i++)
 		if (word[i] == 'q' && word[i + 1] != 'u')
 			return false;
+			
+	/* Word is made up only of letters (no punctuation) */
+	for (i = 0; i < len; i++)
+		if (isalpha(word[i]) == 0)
+			return false;
 	
 	/* Convert qu to just q when considering other tests */
 	qu = gniggle_dictionary_trim_qu(word);
 	len = strlen(qu);
-	
+	free(qu);
+		
 	/* Word is not longer than the maximum length (which is the total
 	 * number of letters on the board, if by some marvel they can all be
 	 * be used to spell a word
 	 */
 	if (len > maxlen)
 		return false;
-	
-	/* Word is made up only of letters (no punctuation) */
-	for (i = 0; i < len; i++)
-		if (isalpha(word[i]) == 0)
-			return false;
 	
 	return true;	
 }
@@ -175,6 +175,9 @@ void gniggle_dictionary_delete(struct gniggle_dictionary *dict)
 			free(n);
 		}	
 	}
+	
+	free(dict->hash);
+	free(dict);
 }
 
 void gniggle_dictionary_add(struct gniggle_dictionary *dict,
@@ -193,6 +196,7 @@ void gniggle_dictionary_add(struct gniggle_dictionary *dict,
 		e->word = (unsigned char *)strdup((char *)word);
 		e->next = dict->hash[bucket];
 		dict->hash[bucket] = e;
+		dict->nwords++;
 	}
 }
 				
@@ -212,7 +216,12 @@ bool gniggle_dictionary_lookup(struct gniggle_dictionary *dict,
 	
 	return false;
 }
-			
+
+unsigned int gniggle_dictionary_size(struct gniggle_dictionary *dict)
+{
+	return dict->nwords;
+}
+	
 struct gniggle_dictionary_iter *gniggle_dictionary_iterator(
 				struct gniggle_dictionary *dict)
 {
@@ -252,12 +261,12 @@ void gniggle_dictionary_iterator_delete(struct gniggle_dictionary_iter *iter)
 
 int main(int argc, char *argv[])
 {
-	struct gniggle_dictionary *dict = gniggle_dictionary_new(4, 4, 0);
+	struct gniggle_dictionary *dict = gniggle_dictionary_new(10, 10, 0);
 	struct gniggle_dictionary_iter *iter;
 	unsigned char word[BUFSIZ];
 	const unsigned char *iterword;
 	
-	FILE *d = fopen("/usr/share/dict/words", "r");
+	FILE *d = fopen("./word.list", "r");
 	
 	while (!feof(d)) {
 		fscanf(d, "%s", word);

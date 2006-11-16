@@ -2,7 +2,7 @@
  * generate.h
  * This file is part of Gniggle
  *
- * Copyright (C) 2006 - Rob Kendrick <rjek@rjek.com
+ * Copyright (C) 2006 - Rob Kendrick <rjek@rjek.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to

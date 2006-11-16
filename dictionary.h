@@ -62,6 +62,9 @@ void gniggle_dictionary_add(struct gniggle_dictionary *dict,
 bool gniggle_dictionary_lookup(struct gniggle_dictionary *dict,
 				const unsigned char *word);
 
+/* returns the number of words in a dictionary */
+unsigned int gniggle_dictionary_size(struct gniggle_dictionary *dict);
+
 /* return an interator structure to be passed to the next function.  It is
  * undefined what happens if you add to the dictionary while iterating it.
  */				
