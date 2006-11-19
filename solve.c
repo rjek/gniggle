@@ -73,12 +73,14 @@ static bool gniggle_solve_look(unsigned char *word, unsigned char *grid,
 				&& (y + sy < height)
 			   ) {
 				if (GRID(x + sx, y + sy) == word[0]) {
-					if (path != NULL)
-						path[0] = GRIDOFFSET(x, y);
+					if (path != NULL) {
+						path[0] = y + 1;
+						path[1] = x + 1;
+					}
 					if (gniggle_solve_look(word + 1, grid,
 						width, height,
 						x + sx, y + sy,
-						path ? path + 1 : NULL) ==
+						path ? path + 2 : NULL) ==
 							true) {
 						return true;
 					}

@@ -112,7 +112,7 @@ const unsigned char **gniggle_game_get_answers(struct gniggle_game *game)
 	
 	while ((word = gniggle_dictionary_next(iter)) != NULL) {
 		if (gniggle_solve_word_on_grid(word, game->grid,
-				game->width, game->height) == true) {
+				game->width, game->height, NULL) == true) {
 				r[found] = word;
 				found++;
 				room--;
@@ -143,7 +143,8 @@ int main(int argc, char *argv[])
 	struct gniggle_game *g;
 	unsigned char word[BUFSIZ];
 	const unsigned char **answers;
-	int i, score = 0, wscore;
+	int i, score = 0, wscore, j;
+	unsigned int path[64];
 	
 	FILE *dict = fopen("dict", "r");
 	
@@ -167,7 +168,11 @@ int main(int argc, char *argv[])
 			i = -2;
 		else {
 			wscore = gniggle_game_word_score(gniggle_score_traditional, answers[i]);
-			printf("%s (%d points)\n", answers[i], wscore);
+			printf("%s ( ");
+			gniggle_solve_word_on_grid(answers[i], g->grid, 4, 4, path);
+			for (j = 0; j < (strlen(answers[i]) * 2); j += 2)
+				printf("%d x %d  ", path[j], path[j + 1]);
+			printf(") (%d points)\n", wscore);
 			score += wscore;
 		}
 	}
