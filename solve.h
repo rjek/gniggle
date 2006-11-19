@@ -37,10 +37,15 @@ bool gniggle_solve_sufficent_letters(const unsigned char *word,
 					const unsigned char *grid);
 
 /* returns true if 'word' is on the grid represented by the string 'grid'.  The
- * grid string is a character per cube, left to right, top to bottom
+ * grid string is a character per cube, left to right, top to bottom.  If you
+ * also want to know the route of the found word, pass in a pointer to an
+ * array of integers that has at least enough room for one integer per letter
+ * in your word.  This will be filled in with numbers representing offsets
+ * into the grid.  If you're not interested, just pass NULL.
  */
 bool gniggle_solve_word_on_grid(const unsigned char *word,
 				const unsigned char *grid,
 				const unsigned int width,
-				const unsigned int height);
+				const unsigned int height,
+				unsigned int *path);
 #endif /* __SOLVE_H__ */

@@ -49,11 +49,13 @@ bool gniggle_solve_sufficent_letters(const unsigned char *word,
 	return true;
 }
 
+#define GRIDOFFSET(ROW, COL) ((ROW * width) + (COL))
 #define GRID(ROW,COL) grid[((ROW) * width) + (COL)]
 
 static bool gniggle_solve_look(unsigned char *word, unsigned char *grid,
 				unsigned int width, unsigned int height,
-				unsigned int x, unsigned int y)
+				unsigned int x, unsigned int y,
+				unsigned int *path)
 {
 	unsigned char eaten;
 	signed int sx, sy;
@@ -71,9 +73,13 @@ static bool gniggle_solve_look(unsigned char *word, unsigned char *grid,
 				&& (y + sy < height)
 			   ) {
 				if (GRID(x + sx, y + sy) == word[0]) {
+					if (path != NULL)
+						path[0] = GRIDOFFSET(x, y);
 					if (gniggle_solve_look(word + 1, grid,
 						width, height,
-						x + sx, y + sy)	== true) {
+						x + sx, y + sy,
+						path ? path + 1 : NULL) ==
+							true) {
 						return true;
 					}
 				}
@@ -89,7 +95,8 @@ static bool gniggle_solve_look(unsigned char *word, unsigned char *grid,
 bool gniggle_solve_word_on_grid(const unsigned char *word,
 				const unsigned char *grid,
 				const unsigned int width,
-				const unsigned int height)
+				const unsigned int height,
+				unsigned int *path)
 {
 	unsigned char firstchar = word[0];
 	unsigned char *wordc;
@@ -106,7 +113,7 @@ bool gniggle_solve_word_on_grid(const unsigned char *word,
 		for (y = 0; y < height; y++) {
 			if (GRID(x, y) == firstchar) {
 				if (gniggle_solve_look(wordc, gridc,
-					width, height, x, y) == true) {
+					width, height, x, y, path) == true) {
 					free(wordc);
 					free(gridc);
 					return true;	
