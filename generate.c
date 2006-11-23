@@ -112,6 +112,7 @@ int main(int argc, char *argv[])
 	printf("%s\n", gniggle_generate_simple(GNIGGLE_BOGGLE, 4, 4));
 	printf("%s\n", gniggle_generate_simple(GNIGGLE_SCRABBLE, 4, 4));
 	printf("%s\n", gniggle_generate_real(4, 4));
+	printf("%s\n", gniggle_generate_real(5, 5));
 	return 0;
 }
 #endif

@@ -183,20 +183,26 @@ void gniggle_dictionary_delete(struct gniggle_dictionary *dict)
 void gniggle_dictionary_add(struct gniggle_dictionary *dict,
 				const unsigned char *word)
 {
+	unsigned char *nqu;
+	
 	if (gniggle_dictionary_word_qualifies(word, dict->gx * dict->gy)
 		== false)
 		return;
+		
+	nqu = gniggle_dictionary_trim_qu(word);
 	
-	if (gniggle_dictionary_lookup(dict, word) == false) {
+	if (gniggle_dictionary_lookup(dict, nqu) == false) {
 		struct gniggle_dictionary_hash_e *e = calloc(
 				sizeof(struct gniggle_dictionary_hash_e), 1);
-		unsigned int hash = gniggle_dictionary_fnv(word);
+		unsigned int hash = gniggle_dictionary_fnv(nqu);
 		unsigned int bucket = hash % (dict->hashsize);
 		
-		e->word = (unsigned char *)strdup((char *)word);
+		e->word = nqu;
 		e->next = dict->hash[bucket];
 		dict->hash[bucket] = e;
 		dict->nwords++;
+	} else {
+		free(nqu);
 	}
 }
 				
@@ -254,6 +260,27 @@ const unsigned char *gniggle_dictionary_next(
 void gniggle_dictionary_iterator_delete(struct gniggle_dictionary_iter *iter)
 {
 	free(iter);
+}
+
+int gniggle_dictionary_load_file(struct gniggle_dictionary *dict,
+					const char *filename)
+{
+	FILE *fh = fopen(filename, "r");
+	unsigned char word[BUFSIZ];
+	int count = 0;
+	
+	if (fh == NULL)
+		return -1;
+	
+	while (!feof(fh)) {
+		fscanf(fh, "%s", word);
+		gniggle_dictionary_add(dict, word);
+		count++;
+	}
+	
+	fclose(fh);
+	
+	return count;
 }
 
 #ifdef TEST_RIG

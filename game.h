@@ -40,7 +40,10 @@ struct gniggle_game {
 	unsigned int width;
 	unsigned int height;
 	unsigned char *grid;
+	unsigned int score;
+	const unsigned char **answers;
 	struct gniggle_dictionary *dict;
+	struct gniggle_dictionary *found;
 };
 
 /* returns the score of a word using the specified scoring style.
@@ -71,4 +74,10 @@ void gniggle_game_delete(struct gniggle_game *game);
  */
 const unsigned char **gniggle_game_get_answers(struct gniggle_game *game);
 
+/* add a word to the list of words found by the user.  It returns the word's
+ * score, zero if the word is not on the board, -1 if the word has already
+ * been guessed, or -2 if the word is not in the dictionary.
+ */
+int gniggle_game_try_word(struct gniggle_game *game,
+					const unsigned char *word);
 #endif /* __GAME_H__ */

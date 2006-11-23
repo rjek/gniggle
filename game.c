@@ -22,12 +22,12 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
- 
+
+#include <string.h>
+#include <stdlib.h>
 #include "game.h"
 #include "dictionary.h"
 #include "solve.h"
-#include <string.h>
-#include <stdlib.h>
 
 unsigned int gniggle_game_word_score(gniggle_score_style style,
 					const unsigned char *word)
@@ -74,6 +74,8 @@ struct gniggle_game *gniggle_game_new(bool generate, const unsigned char *type,
 	r->width = width;
 	r->height = height;
 	r->dict = dict;
+	r->found = gniggle_dictionary_new(width, height, 0);
+	r->score = 0;
 	
 	if (generate == false)
 		r->grid = strdup(type);
@@ -84,12 +86,17 @@ struct gniggle_game *gniggle_game_new(bool generate, const unsigned char *type,
 			r->grid = gniggle_generate_simple(type, width, height);
 	}
 	
+	r->answers = gniggle_game_get_answers(r);
+	
 	return r;
 }
 
 void gniggle_game_delete(struct gniggle_game *game)
 {
 	free(game->grid);
+	free(game->answers);
+	gniggle_dictionary_delete(game->found);
+	
 	free(game);
 }
 
@@ -132,6 +139,38 @@ const unsigned char **gniggle_game_get_answers(struct gniggle_game *game)
 	free(iter);
 	
 	return r;
+}
+
+int gniggle_game_try_word(struct gniggle_game *game,
+					const unsigned char *word) {
+					
+	unsigned char *nqu = gniggle_dictionary_trim_qu(word);
+	unsigned int score;
+	
+	if (gniggle_solve_word_on_grid(nqu, game->grid, game->width,
+					game->height, NULL) == false)
+	{
+		free(nqu);
+		return 0;	
+	}
+	
+	if (gniggle_dictionary_lookup(game->found, nqu) == true) {
+		free(nqu);
+		return -1;
+	}
+	
+	if (gniggle_dictionary_lookup(game->dict, nqu) == false) {
+		free(nqu);
+		return -2;
+	}
+	
+	gniggle_dictionary_add(game->found, nqu);
+	
+	score = gniggle_game_word_score(gniggle_score_traditional, nqu);
+	game->score += score;
+	free(nqu);
+	
+	return score;
 }
 
 #ifdef TEST_RIG

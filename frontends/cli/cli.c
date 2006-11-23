@@ -73,7 +73,6 @@ int main(int argc, char *argv[])
 	int a, w = 0;
 	struct gniggle_game *g;
 	struct gniggle_dictionary *d;
-	struct gniggle_dictionary *found;	/* words found by user */
 	bool quit = false;
 	unsigned int score = 0, mscore = 0;
 	const unsigned char **answers;
@@ -115,33 +114,30 @@ int main(int argc, char *argv[])
 
 	if (dictionary == NULL)
 		dictionary = strdup("/usr/share/dict/words");
-	
-	if (grid == NULL && (width * height) == 16)
-		grid = gniggle_generate_real(width, height);
-	
-	if (grid == NULL)
-		grid = gniggle_generate_simple(GNIGGLE_BOGGLE, width, height);
-		
-	f = fopen(dictionary, "r");
-	
-	if (f == NULL) {
-		fprintf(stderr, "unable to open '%s'\n", dictionary);
-		exit(2);
+			
+	if (grid == NULL) {
+		switch (width * height) {
+		case 16:
+		case 25:
+			grid = gniggle_generate_real(width, height);
+			break;
+		default:
+			grid = gniggle_generate_simple(GNIGGLE_BOGGLE,
+							width, height);
+			break;
+		}
 	}
-
+		
 	printf("loading dictionary... "); fflush(stdout);
 	d = gniggle_dictionary_new(width, height, 0);
-	while (fscanf(f, "%s", word) == 1) {
-		unsigned char *w = gniggle_dictionary_trim_qu(word);
-		gniggle_dictionary_add(d, w);
-		free(w);
+	if (gniggle_dictionary_load_file(d, dictionary) == -1) {
+		fprintf(stderr, "unable to open %s\n", dictionary);
+		exit(1);
 	}
-	fclose(f);
+	
 	printf("%d words.\n", gniggle_dictionary_size(d));
 	
 	g = gniggle_game_new(false, grid, width, height, d);
-	
-	found = gniggle_dictionary_new(width, height, 0);
 	
 	show_cube(grid, width, height);
 	
@@ -159,47 +155,40 @@ int main(int argc, char *argv[])
 		else if (strcmp(word, ".") == 0)
 			quit = true;
 		else {
-			unsigned char *w = gniggle_dictionary_trim_qu(word);
-			if (gniggle_solve_word_on_grid(w, grid,
-				width, height, NULL) == true) {
-				if (gniggle_dictionary_lookup(found, w)
-					== false) {
-					int s = gniggle_game_word_score(
-						gniggle_score_traditional,
-						w);
-						
-					if (gniggle_dictionary_lookup(d, w)
-						== true) {
-						printf("Yes!  %d point%s.\n", s,
-							s == 1 ? "" : "s");
-						score += s;
-						gniggle_dictionary_add(found,
-							w);
-					} else {
-						printf("Sorry, I don't think ");
-						printf("that's a word.\n");
-					}
-				} else {
-					printf("Already guessed that.\n");
-				}
-			} else {
-				printf("Sorry, that word's not there.\n");
+			int wscore = gniggle_game_try_word(g, word);
+			
+			switch (wscore) {
+			case 0:
+				printf("That's not on the board.\n");
+				break;
+			case -1:
+				printf("You've already guessed that!\n");
+				break;
+			case -2:
+				printf("Sorry, I don't know that word.\n");
+				break;
+			default:
+				printf("Yes! %d point%s.\n", wscore,
+					wscore == 1 ? "" : "s");
+				score += wscore;
+				break;
 			}
-			free(w);
 		}
 	} while (quit == false);
 	
 	printf("Finding words you missed...\n"); fflush(stdout);
-	answers = gniggle_game_get_answers(g);
+	answers = g->answers;
 	
 	for (a = 0; a >= 0 ; a++) {
 		if (answers[a] == NULL)
 			a = -2;
 		else {
-			if (gniggle_dictionary_lookup(found, answers[a])
+			if (gniggle_dictionary_lookup(g->found, answers[a])
 				== false) {
-			
-				printf("%s\t\t", answers[a]);
+				unsigned char *qu =
+				     gniggle_dictionary_restore_qu(answers[a]);
+				printf("%s\t\t", qu);
+				free(qu);
 				mscore += gniggle_game_word_score(
 					gniggle_score_traditional, answers[a]);
 				w += 1;

@@ -51,14 +51,26 @@ struct gniggle_dictionary *gniggle_dictionary_new(const unsigned int x,
 					const unsigned int y,
 					const unsigned int hashsize);
 
+/* loads a named file into the dictionary.  The file must consist of one
+ * word per line, in plain ASCII.  Returns the number of words it scanned
+ * (which is different to the number of words inserted into the dictionary)
+ * or -1 in case of error.
+ */
+int gniggle_dictionary_load_file(struct gniggle_dictionary *dict,
+					const char *filename);
+
 /* deletes a dictionary from memory, including its hash table */
 void gniggle_dictionary_delete(struct gniggle_dictionary *dict);
 
-/* adds a word to a dictionary, making sure first that it isn't already there */
+/* adds a word to a dictionary, making sure first that it isn't already there.
+ * any "qu" will be trimmed to just "q" before being added.
+ */
 void gniggle_dictionary_add(struct gniggle_dictionary *dict,
 				const unsigned char *word);
 				
-/* returns true if 'word' is in dictionary.  The word must be lower case. */
+/* returns true if 'word' is in dictionary.  The word must be lower case,
+ * and already have any "qu" converted to just "q".
+ */
 bool gniggle_dictionary_lookup(struct gniggle_dictionary *dict,
 				const unsigned char *word);
 
