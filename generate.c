@@ -44,6 +44,7 @@ unsigned char *gniggle_generate_simple(const unsigned char *distribution,
 	return r;
 }
 
+/* from http://everything2.com/index.pl?node=Boggle */
 static char *gniggle_boggle_cubes[] = {
 	"aeaneg", "ahspco", "aspffk", "objoab", 
 	"iotmuc", "ryvdel", "lreixd", "eiunes", 
@@ -51,26 +52,48 @@ static char *gniggle_boggle_cubes[] = {
 	"erttyl", "toessi", "terwhv", "nuihmq"
 };
 
+/* from http://everything2.com/index.pl?node_id=1286696 */
+static char *gniggle_boggle_deluxe_cubes[] = {
+	"aaafrs", "aaeeee", "aafirs", "adennn",	"aeeeem",
+	"aeegmu", "aegmnn", "afirsy", "bjkqxz", "ccnstw",
+	"ceiilt", "ceilpt", "ceipst", "ddlnor", "dhhlor",
+	"dhhnot", "dhlnor", "eiiitt", "emottt", "ensssu",
+	"fiprsy", "gorrvw", "hiprry", "nootuw", "ooottu"
+};
+
 unsigned char *gniggle_generate_real(unsigned int width, unsigned int height)
 {
 	unsigned char *r;
 	int i;
-	bool used[16];
-	
-	if ((width * height) != 16)
-		return NULL;
+	bool used[25];
+	char **cubes;
+	int size;
 
-	r = calloc(17, 1);
+	switch (width * height) {
+	case 16:
+		cubes = gniggle_boggle_cubes;
+		size = 16;
+		break;
+	case 25:
+		cubes = gniggle_boggle_deluxe_cubes;
+		size = 25;
+		break;
+	default:
+		return NULL;
+		break;
+	}
 	
-	for (i = 0; i < 16; i++)
+	r = calloc(size + 1, 1);
+	
+	for (i = 0; i < size; i++)
 		used[i] = false;		
 	
 	GNIGGLE_RAND_SEED;
 	
-	for (i = 0; i < 16; i++) {
+	for (i = 0; i < size; i++) {
 		int c;
 		do {
-			c = GNIGGLE_RAND(0, 15);
+			c = GNIGGLE_RAND(0, size - 1);
 		} while (used[c] == true);
 		
 		used[c] = true;

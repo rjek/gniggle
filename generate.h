@@ -62,8 +62,9 @@ unsigned char *gniggle_generate_simple(const unsigned char *distribution,
 					unsigned int width,
 					unsigned int height);
 
-/* generate a cube by emulating a real set of Boggle dice.  width * height
- * must equal 16, as there are only 16 dice.
+/* generate a cube by emulating a real set of Boggle dice.  width * heigh
+ * must equal either 16 (for original Boggle) or 25 (for Boggle Deluxe), or
+ * NULL will be returned.
  */
 unsigned char *gniggle_generate_real(unsigned int width, unsigned int height);
 
