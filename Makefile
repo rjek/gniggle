@@ -37,7 +37,7 @@ cli: core frontends/cli/cli.o
 	$(CC) -o gniggle.cli frontends/cli/cli.o libgniggle.a
 	
 clean-cli:
-	rm -rf frontends/cli/cli.o
+	rm -rf frontends/cli/cli.o gniggle.cli
 
 frontends/cli/cli.o: frontends/cli/cli.c
 	$(CC) $(CFLAGS) -I ./ -o frontends/cli/cli.o -c frontends/cli/cli.c
