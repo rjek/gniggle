@@ -155,8 +155,14 @@ int main(int argc, char *argv[])
 		else if (strcmp(word, ".") == 0)
 			quit = true;
 		else {
-			int wscore = gniggle_game_try_word(g, word);
+			int ll;
+		  	int wscore;
 			
+			for (ll = 0; ll < strlen(word); ll++)
+				word[ll] = tolower(word[ll]);
+
+			wscore = gniggle_game_try_word(g, word);
+
 			switch (wscore) {
 			case 0:
 				printf("That's not on the board.\n");
