@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
 	printf("An empty line will print out the cube again.\n\n");
 	
 	do {
-		printf("(%d) :", score);
+		printf("(%d) :", score); fflush(stdout);
 		fgets(word, BUFSIZ, stdin);
 		if (word[strlen(word) - 1] == '\n')
 			word[strlen(word) - 1] = '\0';
@@ -180,6 +180,7 @@ int main(int argc, char *argv[])
 				break;
 			}
 		}
+		fflush(stdout);
 	} while (quit == false);
 	
 	printf("Finding words you missed...\n"); fflush(stdout);
