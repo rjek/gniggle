@@ -28,3 +28,29 @@ listing.  Every 5 minutes is suggested for this, and a 10 minutes record expiry
 is suggested for implementations of the meta server.  A game server must refresh
 its listing if an aspect of the game changes, such as its dimensions or the
 comment string.
+
+Game Protocol
+~~~~~~~~~~~~~
+
+The game protocol is also simple.  It is a simple tag-based protocol that is
+plain text.  Each line sent by either the server or the client is prefixed with
+a tag that describes which part of the protocol it applies to, followed by a
+space.  Tags used by the server are:
+
+	* HELLO - Line describes protocol version spoken by server
+	* MOTD - Line is part of the MOTD.  Multiple lines may occur
+	* GAMETYPE - Line specifies what the game type is.  Also used to
+	             notify clients of the game type changing.
+	* GAMEDATA - Line specifies the data for the game, such as the cube
+	             contents and what time limit there is
+	* TALK - Line is some text produced by the chat system
+	* TIMELEFT - Line describes how much time is left
+	* ANSWERS - Line described all the answers the server got
+	* SCORES - Report the score of other players
+	
+Tags used by the client:
+        * QUIT - Disconnect
+        * SAY - chat text
+        * GUESS - transmit a guess to the server to judge
+	
+	
