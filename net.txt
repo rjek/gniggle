@@ -1,0 +1,30 @@
+Gniggle Networking Protocol
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Gniggle has two network protocols - one for discovering game servers, and
+another for the games played on the game servers.  They are both simplistic
+and plain text.  The intention has been that the servers can be simply
+implemented in very high-level languages, such as Lua or Python.
+
+Game Discovery Protocol
+~~~~~~~~~~~~~~~~~~~~~~~
+
+A TCP protocol on port 14547.  On connecting, the server will return a list
+of servers, along with information about them.  You may also send back a single
+server description in the same format as the ones you received at add it to
+the server's list of games.  If the server already has a knowledge of a server
+at the specified host and port, it'll replace any previous record.  It will then
+disconnect you.  (If you only wish to get the list, connect, and send a newline)
+
+The format of a game record is a single line, in the following format:
+
+  HOST:PORT:WIDTH:HEIGHT:COMMENT STRING\n
+
+A game metaserver is at liberty to refuse to accept listings from hosts whose
+IP address does not match what is mentioned in the HOST part.
+
+A game server should periodically reconnect to the meta server to refresh its
+listing.  Every 5 minutes is suggested for this, and a 10 minutes record expiry
+is suggested for implementations of the meta server.  A game server must refresh
+its listing if an aspect of the game changes, such as its dimensions or the
+comment string.
