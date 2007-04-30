@@ -23,19 +23,25 @@
  * IN THE SOFTWARE.
  */
 
+#define __USE_XOPEN
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <time.h>
 #include <errno.h>
+#include <ctype.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/wait.h>
+#include <poll.h>
 #include <netdb.h>
 #include <netinet/in.h>
 
 #define METASERVER_PORT 14547
+#define METASERVER_MAX_CLIENTS 32
+#define METASERVER_MAX_AGE (5*60)
 
 struct gniggle_server {
 	char host[256];
@@ -68,6 +74,7 @@ void gniggle_server_add(const char *host, const unsigned int port,
 	if (server_list != NULL)
 		server_list->prev = s;
 	
+	s->next = server_list;
 	server_list = s;
 }
 
@@ -113,31 +120,136 @@ int gniggle_server_expire(time_t threshold)
 	return expired;
 }
 
+static char *url_encode(const char *input)
+{
+	char *r, buf[4];
+	const char *x = input;
+	int l = 0;
+	
+	while (*x != '\0') {
+		if (isascii(*x) == 0 || (isalpha(*x) == 0 && isdigit(*x) == 0))
+			l += 3;
+		else
+			l++;
+		x++;
+	}
+	
+	r = calloc(l + 1, 1);
+	x = input;
+	
+	while (*x != '\0') {
+		if (isascii(*x) == 0 ||
+			(isalpha(*x) == 0 && isdigit(*x) == 0)) {
+			snprintf(buf, 4, "%%%02x", *x);
+			strcat(r, buf);
+		}
+		else {
+			strncat(r, x, 1);
+		}
+		x++;
+	}
+	
+	return r;
+}
+
+void gniggle_server_send_list(int fd)
+{
+	char buf[2048];
+	struct gniggle_server *c = server_list;
+	
+	while (c != NULL) {
+		char *comment = url_encode(c->comment);
+		int len = snprintf(buf, 2047, "%s:%d:%d:%d:%s\n",
+					c->host, c->port, c->width, c->height,
+					comment);
+		free(comment);
+		write(fd, buf, len);
+		
+		c = c->next;
+	}
+}
+
+struct connection {
+	int fd;
+	char inbuf[2048];
+	int inbuflen;
+	time_t activity;
+};
+
+void server(int serv)
+{
+	struct connection *conn = calloc(sizeof(struct connection),
+						METASERVER_MAX_CLIENTS);
+
+	struct pollfd *fds = calloc(sizeof(struct pollfd), 
+					METASERVER_MAX_CLIENTS + 1);
+	nfds_t nfds;
+	int i;
+	
+	for (i = 0; i < METASERVER_MAX_CLIENTS; i++) {
+		conn[i].fd = -1;
+	}
+	
+	fds[0].fd = serv;
+	fds[0].events = POLLIN;
+	
+	while (true) {
+		nfds = 1;
+		for (i = 0; i < METASERVER_MAX_CLIENTS; i++) {
+			if (conn[i].fd != -1) {
+				fds[nfds].fd = conn[i].fd;
+				fds[nfds].events = POLLIN;
+				nfds++;
+			}
+		}
+		if (poll(fds, nfds, 5000) > 0) {
+			if ((fds[0].revents & POLLIN) != 0) {
+				/* new connection */
+				int nc = accept(serv, NULL, NULL);
+				for (i = 0; i < METASERVER_MAX_CLIENTS; i++) {
+					if (conn[i].fd == -1) {
+						conn[i].fd = nc;
+						conn[i].inbuflen = 0;
+						conn[i].activity = time(NULL);
+						gniggle_server_send_list(nc);
+						break;
+					}
+				}
+				fds[0].revents = 0;
+			}
+		}
+	}
+}
+
 int main(int argc, char *argv[])
 {
 	int one = 1;
 	int sock = socket(PF_INET, SOCK_STREAM, 0);
 	struct sockaddr_in addr;
 
-        setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof one);	
+        setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof one);
+        addr.sin_family = AF_INET;
 	addr.sin_port = htons(METASERVER_PORT);
-	addr.sin_addr.s_addr = -1;
+	addr.sin_addr.s_addr = 0;
  	
-	if (bind(sock, (struct sockaddr*)&addr, sizeof(addr)) == -1)
-	{
+	if (bind(sock, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
 		fprintf(stderr, "%s: %s while binding\n", argv[0],
 			strerror(errno));
 		close(sock);
 		exit(errno);
 	}
 	
-	if (listen(sock, 128) == -1)
-	{
+	if (listen(sock, 128) == -1) {
 		close(sock);
 		fprintf(stderr, "%s: %s while trying to listen.\n", argv[0],
 			strerror(errno));
  		exit(errno);
 	}
-	
+
+	gniggle_server_add("gniggle.rjek.com", 1234, 4, 4, "Rob's gniggle server");
+	gniggle_server_add("gniggle.geah.org", 1234, 5, 5, "Lesley's gniggle server");
+
+	server(sock);
+		
 	return 0;
 }
