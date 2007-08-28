@@ -14,6 +14,7 @@ clean: clean-cli
 	rm -rf libgniggle.a game.o solve.o dictionary.o generate.o
 
 libgniggle.a: game.o solve.o dictionary.o generate.o
+	rm -rf libgniggle.a
 	$(AR) q libgniggle.a game.o solve.o dictionary.o generate.o
 	
 game.o: game.c game.h dictionary.h generate.h

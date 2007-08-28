@@ -270,13 +270,17 @@ int gniggle_dictionary_dump(struct gniggle_dictionary *dict,
 	int l;
 	uint32_t magic = 0x12345678;
 	unsigned char fl;
+	int testhash;
 
 	if (fh == NULL)
 		return -1;
 
 	fwrite("GNIGDICT", 8, 1, fh); /* identifier */
 	fwrite(&magic, sizeof(magic), 1, fh); /* endian detection word */
-	
+
+	testhash = gniggle_dictionary_fnv("GNIGGLE v1");
+	fwrite(&testhash, sizeof(testhash), 1, fh); /* same-hash check */
+
 	fl = sizeof(unsigned char);
 	fwrite(&fl, sizeof(fl), 1, fh); /* size of unsigned char */
 	
@@ -321,7 +325,7 @@ struct gniggle_dictionary *gniggle_dictionary_undump(const unsigned x,
 	uint32_t magic;
 	unsigned char fl;
 	unsigned char head[8];
-	int l;
+	int l, testhash;
 
 	struct gniggle_dictionary *d;
 
@@ -330,6 +334,12 @@ struct gniggle_dictionary *gniggle_dictionary_undump(const unsigned x,
 
 	fread(head, 8, 1, fh);
 	if (strncmp(head, "GNIGDICT", 8) != 0) {
+		fclose(fh);
+		return NULL;
+	}
+
+	fread(&testhash, sizeof(testhash), 1, fh);
+	if (gniggle_dictionary_fnv("GNIGGLE v1") != testhash) {
 		fclose(fh);
 		return NULL;
 	}
@@ -367,19 +377,17 @@ struct gniggle_dictionary *gniggle_dictionary_undump(const unsigned x,
 	for (l = 0; l < d->hashsize; l++) {
 		unsigned short chainsize;
 		int w;
-		fread(&chainsize, sizeof(unsigned short), 1, fh);
-		if (w > 0) {
-			for (w = 0; w < chainsize; w++) {
-				struct gniggle_dictionary_hash_e *e;
-				unsigned char wl;
-				e = calloc(sizeof(
-					struct gniggle_dictionary_hash_e), 1);
-				fread(&wl, sizeof(wl), 1, fh);
-				e->word = calloc(wl + 1, 1);
-				fread(e->word, wl, 1, fh);
-				e->next = d->hash[l];
-				d->hash[l] = e;
-			}
+		fread(&chainsize, sizeof(chainsize), 1, fh);
+		for (w = 0; w < chainsize; w++) {
+			struct gniggle_dictionary_hash_e *e;
+			unsigned char wl;
+			e = calloc(sizeof(
+				struct gniggle_dictionary_hash_e), 1);
+			fread(&wl, sizeof(wl), 1, fh);
+			e->word = calloc(wl + 1, 1);
+			fread(e->word, wl, 1, fh);
+			e->next = d->hash[l];
+			d->hash[l] = e;
 		}
 	}
 

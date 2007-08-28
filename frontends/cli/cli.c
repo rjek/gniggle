@@ -145,6 +145,7 @@ int main(int argc, char *argv[])
 		printf("\ndumping dictionary... "); fflush(stdout);
 	  	gniggle_dictionary_dump(d, dump);
 		printf("\n");
+		gniggle_dictionary_delete(d);
 		exit(1);
 	}	
 
