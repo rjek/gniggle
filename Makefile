@@ -34,7 +34,7 @@ generate.o: generate.c generate.h
 # -----------------------------------------------------------------------------
 
 cli: core frontends/cli/cli.o
-	$(CC) -o gniggle.cli frontends/cli/cli.o libgniggle.a
+	$(CC) -lz -o gniggle.cli frontends/cli/cli.o libgniggle.a
 	
 clean-cli:
 	rm -rf frontends/cli/cli.o gniggle.cli
