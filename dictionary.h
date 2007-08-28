@@ -59,6 +59,16 @@ struct gniggle_dictionary *gniggle_dictionary_new(const unsigned int x,
 int gniggle_dictionary_load_file(struct gniggle_dictionary *dict,
 					const char *filename);
 
+/* create a new dictionary using a file as a reference.  This call supports
+ * both plain-text dictionaries, and ones created with the dump function.
+ * The hash size is ignored when undumping binary dictionaries.
+ */
+struct gniggle_dictionary *gniggle_dictionary_new_from_file(
+					const unsigned int x,
+					const unsigned int y,
+					const unsigned int hashsize,
+					const char *filename);
+
 /* deletes a dictionary from memory, including its hash table */
 void gniggle_dictionary_delete(struct gniggle_dictionary *dict);
 
@@ -96,5 +106,8 @@ void gniggle_dictionary_iterator_delete(struct gniggle_dictionary_iter *iter);
 int gniggle_dictionary_dump(struct gniggle_dictionary *dict,
 				const char *filename);
  
+/* undumps a dictionary from a file, creating a new dictionary */
+struct gniggle_dictionary * gniggle_dictionary_undump(const unsigned int x,
+    				const unsigned int y, const char *filename);
 
 #endif /* __DICTIONARY_H__ */

@@ -135,15 +135,16 @@ int main(int argc, char *argv[])
 	}
 		
 	printf("loading dictionary... "); fflush(stdout);
-	d = gniggle_dictionary_new(width, height, 0);
-	if (gniggle_dictionary_load_file(d, dictionary) == -1) {
+	d = gniggle_dictionary_new_from_file(width, height, 0, dictionary);
+	if (d == NULL) {
 		fprintf(stderr, "unable to open %s\n", dictionary);
 		exit(1);
 	}
 	
 	if (dump != NULL) {
-		printf("dumping dictionary... "); fflush(stdout);
+		printf("\ndumping dictionary... "); fflush(stdout);
 	  	gniggle_dictionary_dump(d, dump);
+		printf("\n");
 		exit(1);
 	}	
 

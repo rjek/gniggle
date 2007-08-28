@@ -26,6 +26,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <malloc.h>
 #include <ctype.h>
 #include "dictionary.h"
@@ -266,25 +267,27 @@ int gniggle_dictionary_dump(struct gniggle_dictionary *dict,
     					const char *filename)
 {
 	FILE *fh = fopen(filename, "wb");
-	struct gniggle_dictionary_iter i;
 	int l;
 	uint32_t magic = 0x12345678;
+	unsigned char fl;
 
 	if (fh == NULL)
 		return -1;
 
-	fwrite("GNIGDICT", 8, 1, fh);
-	fwrite(&magic, sizeof(magic), 1, fh);
+	fwrite("GNIGDICT", 8, 1, fh); /* identifier */
+	fwrite(&magic, sizeof(magic), 1, fh); /* endian detection word */
 	
+	fl = sizeof(unsigned char);
+	fwrite(&fl, sizeof(fl), 1, fh); /* size of unsigned char */
+	
+	fl = sizeof(unsigned short);
+	fwrite(&fl, sizeof(fl), 1, fh); /* size of short */
 
 	fwrite(&dict->nwords, sizeof(dict->nwords), 1, fh);
 	fwrite(&dict->hashsize, sizeof(dict->hashsize), 1, fh);
 	
-	i.bucket = 0;
-	i.entry = dict->hash[0];
-
 	for (l = 0; l < dict->hashsize; l++) {
-		short chainsize = 0; 
+		unsigned short chainsize = 0; 
 		struct gniggle_dictionary_hash_e *e = dict->hash[l];
 
 		while (e != NULL) {
@@ -310,6 +313,110 @@ int gniggle_dictionary_dump(struct gniggle_dictionary *dict,
 
 	fclose(fh);
 }
+
+struct gniggle_dictionary *gniggle_dictionary_undump(const unsigned x,
+    					const unsigned y, const char *filename)
+{
+	FILE *fh = fopen(filename, "rb");
+	uint32_t magic;
+	unsigned char fl;
+	unsigned char head[8];
+	int l;
+
+	struct gniggle_dictionary *d;
+
+	if (fh == NULL)
+		return NULL;
+
+	fread(head, 8, 1, fh);
+	if (strncmp(head, "GNIGDICT", 8) != 0) {
+		fclose(fh);
+		return NULL;
+	}
+
+	fread(&magic, sizeof(uint32_t), 1, fh);
+	if (magic != 0x12345678) {
+		fclose(fh);
+		return NULL;
+	}
+
+	fread(&fl, sizeof(fl), 1, fh);
+	if (fl != sizeof(unsigned char)) {
+		fclose(fh);
+		return NULL;
+	}
+
+	fread(&fl, sizeof(fl), 1, fh);
+	if (fl != sizeof(unsigned short)) {
+	 	fclose(fh);
+		return NULL;
+	}
+
+	d = calloc(sizeof(struct gniggle_dictionary), 1);
+
+	fread(&d->nwords, sizeof(d->nwords), 1, fh);
+	fread(&d->hashsize, sizeof(d->hashsize), 1, fh);
+
+	d->gx = x;
+	d->gy = y;
+
+
+	d->hash = calloc(sizeof(struct gniggle_dictionary_hash_e **),
+	    			d->hashsize);
+
+	for (l = 0; l < d->hashsize; l++) {
+		unsigned short chainsize;
+		int w;
+		fread(&chainsize, sizeof(unsigned short), 1, fh);
+		if (w > 0) {
+			for (w = 0; w < chainsize; w++) {
+				struct gniggle_dictionary_hash_e *e;
+				unsigned char wl;
+				e = calloc(sizeof(
+					struct gniggle_dictionary_hash_e), 1);
+				fread(&wl, sizeof(wl), 1, fh);
+				e->word = calloc(wl + 1, 1);
+				fread(e->word, wl, 1, fh);
+				e->next = d->hash[l];
+				d->hash[l] = e;
+			}
+		}
+	}
+
+	fclose(fh);
+	return d;
+}
+
+struct gniggle_dictionary *gniggle_dictionary_new_from_file(
+					const unsigned int x,
+					const unsigned int y,
+					const unsigned int hashsize,
+					const char *filename)
+{
+	FILE *fh = fopen(filename, "rb");
+	unsigned char head[8];
+	uint32_t magic;
+
+	if (fh == NULL)
+		return NULL;
+
+	fread(head, 8, 1, fh);
+	fread(&magic, sizeof(magic), 1, fh);
+
+	if ((strncmp(head, "GNIGDICT", 8) == 0) && magic == 0x12345678) {
+	  	fclose(fh);
+		return gniggle_dictionary_undump(x, y, filename);
+	} else {
+		struct gniggle_dictionary *d;
+		fclose(fh);
+		d = gniggle_dictionary_new(x, y, hashsize);
+		gniggle_dictionary_load_file(d, filename);
+		return d;
+	}
+	
+	return NULL;
+}
+
 
 int gniggle_dictionary_load_file(struct gniggle_dictionary *dict,
 					const char *filename)
