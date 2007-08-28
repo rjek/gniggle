@@ -39,6 +39,7 @@ static void usage(char *argv[])
 	printf("   -y height\n");
 	printf("   -d dictionary\n");
 	printf("   -g grid contents\n");
+	printf("   -c dictionary dump to create\n");
 }
 
 static void show_cube(const unsigned char *grid, unsigned int x, unsigned int y)
@@ -69,7 +70,8 @@ static void show_cube(const unsigned char *grid, unsigned int x, unsigned int y)
 int main(int argc, char *argv[])
 {
 	unsigned int width = 4, height = 4;
-	unsigned char *grid = NULL, *dictionary = NULL, word[BUFSIZ];
+	unsigned char *dump = NULL, *grid = NULL, *dictionary = NULL;
+	unsigned char word[BUFSIZ];
 	int a, w = 0;
 	struct gniggle_game *g;
 	struct gniggle_dictionary *d;
@@ -104,6 +106,10 @@ int main(int argc, char *argv[])
 					grid = strdup(argv[a + 1]);
 					a++;
 					break;
+				case 'c':
+					dump = strdup(argv[a + 1]);
+					a++;
+					break;
 				default:
 					usage(argv);
 					exit(1);
@@ -135,6 +141,13 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	
+	if (dump != NULL) {
+		printf("dumping dictionary... "); fflush(stdout);
+	  	gniggle_dictionary_dump(d, dump);
+		exit(1);
+	}	
+
+
 	printf("%d words.\n", gniggle_dictionary_size(d));
 	
 	g = gniggle_game_new(false, grid, width, height, d);

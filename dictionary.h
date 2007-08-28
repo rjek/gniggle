@@ -92,4 +92,9 @@ const unsigned char *gniggle_dictionary_next(
 /* deletes an iterator from memory once you are done with it */
 void gniggle_dictionary_iterator_delete(struct gniggle_dictionary_iter *iter);
 
+/* dumps a dictionary to a file in a binary format which is quicker to load */
+int gniggle_dictionary_dump(struct gniggle_dictionary *dict,
+				const char *filename);
+ 
+
 #endif /* __DICTIONARY_H__ */

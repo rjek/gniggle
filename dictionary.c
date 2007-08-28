@@ -262,6 +262,55 @@ void gniggle_dictionary_iterator_delete(struct gniggle_dictionary_iter *iter)
 	free(iter);
 }
 
+int gniggle_dictionary_dump(struct gniggle_dictionary *dict,
+    					const char *filename)
+{
+	FILE *fh = fopen(filename, "wb");
+	struct gniggle_dictionary_iter i;
+	int l;
+	uint32_t magic = 0x12345678;
+
+	if (fh == NULL)
+		return -1;
+
+	fwrite("GNIGDICT", 8, 1, fh);
+	fwrite(&magic, sizeof(magic), 1, fh);
+	
+
+	fwrite(&dict->nwords, sizeof(dict->nwords), 1, fh);
+	fwrite(&dict->hashsize, sizeof(dict->hashsize), 1, fh);
+	
+	i.bucket = 0;
+	i.entry = dict->hash[0];
+
+	for (l = 0; l < dict->hashsize; l++) {
+		short chainsize = 0; 
+		struct gniggle_dictionary_hash_e *e = dict->hash[l];
+
+		while (e != NULL) {
+			chainsize++;
+			e = e->next;
+		}
+
+		fwrite(&chainsize, sizeof(chainsize), 1, fh);
+
+		if (chainsize != 0) {
+			unsigned char sl;
+		  	e = dict->hash[l];
+			while (e != NULL) {
+				sl = strlen(e->word);
+				fwrite(&sl, sizeof(sl), 1, fh);
+				fwrite(e->word, sl, 1, fh);
+				e = e->next;
+			}
+
+		}
+		
+	}
+
+	fclose(fh);
+}
+
 int gniggle_dictionary_load_file(struct gniggle_dictionary *dict,
 					const char *filename)
 {
