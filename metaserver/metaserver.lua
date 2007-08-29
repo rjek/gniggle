@@ -24,8 +24,9 @@
 -- IN THE SOFTWARE.
 
 config = {
-	bind = { host = "localhost", port = 1234 },
-	allowNew = true,
+	bind = { host = "localhost", port = 14547 },
+	serverExpireTime = 60*10,
+	clientExpireTime = 10,
 }
 
 require "socket"
@@ -37,6 +38,8 @@ local servers = { }
 local s = socket.tcp()
 local connections = { s }
 local buffers = { }
+local lastseen = { }
+
 s:setoption("reuseaddr", true)
 s:bind(config.bind.host, config.bind.port)
 s:listen(10)
@@ -55,28 +58,26 @@ function ProcessLine(c, l)
 	
 	if host ~= nil then
 		local t = { host = host, port = port, width = width,
-				height = height, comment = comment }
+				height = height, comment = comment,
+				lastseen = os.time() }
 		servers[host .. port] = t;
 	end
 
 	buffers[c] = nil
 	connections[c] = nil
+	lastseen[c] = nil
 	c:close();
 end
 
 while true do
 	local read, send, err = socket.select(connections, connections, 1)
 
-	if err == "timeout" then
-		-- do some tidying of idling connections and expire old
-		-- entries in the server list
-	end
-
 	for _, r in ipairs(read) do
 		if r == s then
 			local c = s:accept()
 			connections[#connections + 1] = c
 			buffers[c] = ""
+			lastseen[c] = os.time()
 			SendList(c)
 			c:settimeout(0)
 		else
@@ -84,6 +85,7 @@ while true do
 			if l == nil and err ~= nil then
 				buffers[r] = nil
 				connections[r] = nil
+				lastseen[r] = nil
 				r:close()
 			else
 				buffers[r] = buffers[r] .. l
@@ -92,8 +94,44 @@ while true do
 				if cl ~= nil then
 					buffers[r] = re
 					ProcessLine(r, cl)
+					lastseen[r] = os.time()
 				end
 			end
 		end
+	end
+
+	-- do some house-keeping.  disconnect people who havn't done anything
+	-- in a while, and expire old server entries
+	
+	local now = os.time()
+	local toremove = {}
+
+	for i, v in ipairs(connections) do
+	  	print(i,v)
+		print(lastseen[v])
+		if v ~= s and now - lastseen[v] > config.clientExpireTime then
+		  	io.write("Expiring client ", tostring(v), ": ", now, " - ", lastseen[v], " == ", now - lastseen[v])
+			toremove[#toremove+1] = v
+		end
+	end
+
+	for i, v in ipairs(toremove) do
+		buffers[v] = nil
+		connections[v] = nil
+		lastseen[v] = nil
+		v:close();
+	end
+
+	toremove = { }
+
+	for i, v in ipairs(servers) do
+		if servers[v].lastseen - now > config.serverExpireTime then
+			print("Expiring server " .. servers[v].hostname)
+			toremove[#toremove + 1] = v
+		end
+	end
+
+	for i, v in ipairs(toremove) do
+		servers[v] = nil
 	end
 end
