@@ -3,6 +3,7 @@
  * This file is part of Gniggle
  *
  * Copyright (C) 2006 - Rob Kendrick <rjek@rjek.com>
+ * Copyright (C) 2007 - James Shaw <js102@zepler.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -42,9 +43,35 @@ static void usage(char *argv[])
 	printf("   -c dictionary dump to create\n");
 }
 
-static void show_cube(const unsigned char *grid, unsigned int x, unsigned int y)
+static int cube_index(
+		const unsigned int xx,
+		const unsigned int yy,
+		const unsigned int width,
+		const unsigned int height,
+		const unsigned int rotation) {
+	switch (rotation) {
+	case 0:
+		return (yy * width) + xx;
+	case 1:
+		return (height * (width - xx - 1)) + yy;
+	case 2:
+		return (width * (height - yy)) - xx - 1;
+	case 3:
+		return (height * (xx + 1)) - yy - 1;
+	}
+}
+
+static void show_cube(const unsigned char *grid, unsigned int x, unsigned int y,
+			unsigned int rotation)
 {
 	unsigned int xx, yy, zz;
+	if (rotation % 2 == 1) {
+		unsigned int t;
+		/* need to swap x and y when rotated 90 or 270 degrees */
+		t = y;
+		y = x;
+		x = t;
+	}
 	
 	printf("\n  +");
 	for (zz = 0; zz < x; zz++)
@@ -53,7 +80,7 @@ static void show_cube(const unsigned char *grid, unsigned int x, unsigned int y)
 	for (yy = 0; yy < y; yy++) {
 		printf("\n  |");
 		for (xx = 0; xx < x; xx++) {
-			char c = grid[(yy * x) + xx];
+			char c = grid[cube_index(xx, yy, x, y, rotation)];
 			if (c == 'q')
 				printf(" Qu|");
 			else
@@ -70,6 +97,7 @@ static void show_cube(const unsigned char *grid, unsigned int x, unsigned int y)
 int main(int argc, char *argv[])
 {
 	unsigned int width = 4, height = 4;
+	unsigned int rotation = 0;
 	unsigned char *dump = NULL, *grid = NULL, *dictionary = NULL;
 	unsigned char word[BUFSIZ];
 	int a, w = 0;
@@ -154,9 +182,10 @@ int main(int argc, char *argv[])
 	
 	g = gniggle_game_new(false, grid, width, height, d);
 	
-	show_cube(grid, width, height);
+	show_cube(grid, width, height, rotation);
 	
 	printf("Enter a . (a dot) on a line of its own to give up.\n");
+	printf("Enter 'r' to rotate the cube.\n");
 	printf("An empty line will print out the cube again.\n\n");
 	
 	do {
@@ -166,10 +195,13 @@ int main(int argc, char *argv[])
 			word[strlen(word) - 1] = '\0';
 			
 		if (word[0] == '\0')
-			show_cube(grid, width, height);
+			show_cube(grid, width, height, rotation);
 		else if (strcmp(word, ".") == 0)
 			quit = true;
-		else {
+		else if (strcmp(word, "r") == 0) {
+			rotation = (rotation + 1) % 4;
+			show_cube(grid, width, height, rotation);
+		} else {
 			int ll;
 		  	int wscore;
 			
