@@ -168,18 +168,17 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "unable to open %s\n", dictionary);
 		exit(1);
 	}
-	
+
+	printf("%d words.\n", gniggle_dictionary_size(d));
+
 	if (dump != NULL) {
-		printf("\ndumping dictionary... "); fflush(stdout);
+		printf("dumping dictionary... "); fflush(stdout);
 	  	gniggle_dictionary_dump(d, dump);
-		printf("\n");
+		printf("done.\n");
 		gniggle_dictionary_delete(d);
 		exit(1);
 	}	
 
-
-	printf("%d words.\n", gniggle_dictionary_size(d));
-	
 	g = gniggle_game_new(false, grid, width, height, d);
 	
 	show_cube(grid, width, height, rotation);
