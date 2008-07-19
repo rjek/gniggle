@@ -177,6 +177,35 @@ static int l_gniggle_dict_undump(lua_State *L)
 	return luaL_error("dict_iter is unimplemented!");
 }
 
+/* Game handling functions */
+
+#define GAME_META_NAME "gnigglegame"
+
+static int l_gniggle_game_word_score(lua_State *L)
+{
+	return 0;
+}
+
+static int l_gniggle_game_new(lua_State *L)
+{
+	return 0;
+}
+
+static int l_gniggle_game_gc(lua_State *L)
+{
+	return 0;
+}
+
+static int l_gniggle_game_get_answers(lua_State *L)
+{
+	return 0;
+}
+
+static int l_gniggle_game_try_word(lua_State *L)
+{
+	return 0;
+}
+
 /* Lua interface entry points */
 
 static const struct luaL_Reg gniggle[] = {
@@ -194,6 +223,11 @@ static const struct luaL_Reg gniggle[] = {
 	{ "dict_iter_delete", 	l_gniggle_dict_iter_delete },
 	{ "dict_dump", 		l_gniggle_dict_dump },
 	{ "dict_undump", 	l_gniggle_dict_undump },
+	
+	{ "game_word_score",	l_gniggle_game_score },
+	{ "game_new",		l_gniggle_game_new },
+	{ "game_get_answers",	l_gniggle_game_get_answers },
+	{ "game_try_word", 	l_gniggle_game_try_word },
 	
 	{ NULL, NULL }
 };
