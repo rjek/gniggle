@@ -254,7 +254,12 @@ static int l_gniggle_game_get_answers(lua_State *L)
 
 static int l_gniggle_game_try_word(lua_State *L)
 {
-	return 0;
+	struct gniggle_game **g = luaL_checkudata(L, 1, GAME_META_NAME);
+	const char *w = luaL_checkstring(L, 2);
+	
+	lua_pushnumber(L, gniggle_game_try_word(*g, w));
+	
+	return 1;
 }
 
 /* cube generation functions */
