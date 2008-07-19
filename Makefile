@@ -5,6 +5,7 @@ default:
 	@echo "target can be one of:"
 	@echo "    core              Builds only core code, no front end"
 	@echo "    cli               Very dull CLI terminal front end"
+	@echo "    lua               Lua binding"
 	@echo
 	@echo "    clean             Clean everything up"
 
@@ -41,3 +42,12 @@ clean-cli:
 
 frontends/cli/cli.o: frontends/cli/cli.c
 	$(CC) $(CFLAGS) -I ./ -o frontends/cli/cli.o -c frontends/cli/cli.c
+	
+lua: core frontends/lua/lua.o
+	$(CC) -shared -lz `pkg-config --libs lua5.1` -o luagniggle.so frontends/lua/lua.o libgniggle.a
+
+clean-lua:
+	rm -rf frontends/lua/lua.o luagniggle.so
+
+frontends/lua/lua.o: frontends/lua/lua.c
+	$(CC) $(CFLAGS)  `pkg-config --cflags lua5.1` -I ./ -o frontends/lua/lua.o -c frontends/lua/lua.c
