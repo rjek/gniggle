@@ -29,6 +29,21 @@
 #include <lauxlib.h>
 
 #include "dictionary.h"
+#include "game.h"
+#include "generate.h"
+
+/* Lua, annoyingly, does not have this function.  It's trivial to implement,
+ * and its semantics are clear.  Apparently, there's some ambiguity that I
+ * cannot grasp or detect.
+ */
+static bool luaL_checkboolean(lua_State *L, int index)
+{
+	 bool r = lua_toboolean(L, index);
+	 
+	 luaL_checktype(L, index, LUA_TBOOLEAN);
+	 
+	 return r;
+}
 
 /* dictionary functions */
 
@@ -154,27 +169,27 @@ static int l_gniggle_dict_size(lua_State *L)
 
 static int l_gniggle_dict_iter(lua_State *L)
 {
-	return luaL_error("dict_iter is unimplemented!");
+	return luaL_error(L, "dict_iter is unimplemented!");
 }
 
 static int l_gniggle_dict_next(lua_State *L)
 {
-	return luaL_error("dict_iter is unimplemented!");
+	return luaL_error(L, "dict_next is unimplemented!");
 }
 
 static int l_gniggle_dict_iter_delete(lua_State *L)
 {
-	return luaL_error("dict_iter is unimplemented!");
+	return luaL_error(L, "dict_iter_delete is unimplemented!");
 }
 
 static int l_gniggle_dict_dump(lua_State *L)
 {
-	return luaL_error("dict_iter is unimplemented!");
+	return luaL_error(L, "dict_dump is unimplemented!");
 }
 
 static int l_gniggle_dict_undump(lua_State *L)
 {
-	return luaL_error("dict_iter is unimplemented!");
+	return luaL_error(L, "dict_undump is unimplemented!");
 }
 
 /* Game handling functions */
@@ -183,27 +198,98 @@ static int l_gniggle_dict_undump(lua_State *L)
 
 static int l_gniggle_game_word_score(lua_State *L)
 {
-	return 0;
+	const gniggle_score_style s = luaL_checknumber(L, 1);
+	const char *w = luaL_checkstring(L, 2);
+	
+	lua_pushnumber(L, gniggle_game_word_score(s, w));
+	return 1;
 }
 
 static int l_gniggle_game_new(lua_State *L)
 {
-	return 0;
+	bool generate = luaL_checkboolean(L, 1);
+	const char *type = luaL_optstring(L, 2, NULL);
+	int w = luaL_checknumber(L, 3);
+	int h = luaL_checknumber(L, 4);
+	struct gniggle_dictionary **d = luaL_checkudata(L, 5, DICT_META_NAME);
+
+	struct gniggle_game **g = lua_newuserdata(L,
+		sizeof(struct gniggle_game *));
+		
+	*g = gniggle_game_new(generate, type, w, h, *d);
+	
+	luaL_getmetatable(L, GAME_META_NAME);
+	lua_setmetatable(L, -2);
+	
+	return 1;
 }
 
 static int l_gniggle_game_gc(lua_State *L)
 {
+	struct gniggle_game **g = luaL_checkudata(L, 1, GAME_META_NAME);
+	
+	gniggle_game_delete(*g);
+	
 	return 0;
 }
 
 static int l_gniggle_game_get_answers(lua_State *L)
 {
-	return 0;
+	struct gniggle_game **g = luaL_checkudata(L, 1, GAME_META_NAME);
+	unsigned char **answers = gniggle_game_get_answers(*g);
+	int i = 0;
+	
+	lua_newtable(L);
+	do {
+		if (answers[i] != NULL) {
+			lua_pushnumber(L, i + 1);
+			lua_pushstring(L, answers[i]);
+			lua_settable(L, -3);
+			i++;
+		}
+	} while (answers[i] != NULL);
+	
+	return 1;
 }
 
 static int l_gniggle_game_try_word(lua_State *L)
 {
 	return 0;
+}
+
+/* cube generation functions */
+
+static int l_gniggle_generate_simple(lua_State *L)
+{
+	const char *d = luaL_checkstring(L, 1);
+	const int w = luaL_checknumber(L, 2);
+	const int h = luaL_checknumber(L, 3);
+	unsigned char *c;
+	
+	if (w * h < 1)
+		return luaL_error(L, "Grid size of %d is too small.", w * h);
+	
+	c = gniggle_generate_simple(d, w, h);
+	lua_pushstring(L, c);
+	free(c);
+	
+	return 1;
+}
+
+static int l_gniggle_generate_real(lua_State *L)
+{
+	const int w = luaL_checknumber(L, 1);
+	const int h = luaL_checknumber(L, 2);
+	unsigned char *c;
+	
+	if (w * h != 16 && w * h != 25)
+		return luaL_error(L, "Grid size is other than 16 or 25.");
+	
+	c = gniggle_generate_real(w, h);
+	lua_pushstring(L, c);
+	free(c);
+	
+	return 1;
 }
 
 /* Lua interface entry points */
@@ -224,10 +310,13 @@ static const struct luaL_Reg gniggle[] = {
 	{ "dict_dump", 		l_gniggle_dict_dump },
 	{ "dict_undump", 	l_gniggle_dict_undump },
 	
-	{ "game_word_score",	l_gniggle_game_score },
+	{ "game_word_score",	l_gniggle_game_word_score },
 	{ "game_new",		l_gniggle_game_new },
 	{ "game_get_answers",	l_gniggle_game_get_answers },
 	{ "game_try_word", 	l_gniggle_game_try_word },
+	
+	{ "generate_simple",	l_gniggle_generate_simple },
+	{ "generate_real",	l_gniggle_generate_real },
 	
 	{ NULL, NULL }
 };
@@ -240,8 +329,38 @@ int luaopen_luagniggle(lua_State *L)
 	lua_pushliteral(L, "__gc");
 	lua_pushcclosure(L, l_gniggle_dict_gc, 0);
 	lua_settable(L, -3);
-	
 	lua_pop(L, 1);
+	
+	luaL_newmetatable(L, GAME_META_NAME);
+	lua_pushliteral(L, "__gc");
+	lua_pushcclosure(L, l_gniggle_game_gc, 0);
+	lua_settable(L, -3);
+	lua_pop(L, 1);
+	
+	/* register enums */
+	lua_pushliteral(L, "score_traditional");
+	lua_pushnumber(L, gniggle_score_traditional);
+	lua_settable(L, -3);
+	
+	lua_pushliteral(L, "score_letters");
+	lua_pushnumber(L, gniggle_score_letters);
+	lua_settable(L, -3);
+	
+	lua_pushliteral(L, "score_multiply");
+	lua_pushnumber(L, gniggle_score_multiply);
+	lua_settable(L, -3);
+	
+	lua_pushliteral(L, "alphabet");
+	lua_pushliteral(L, GNIGGLE_ALPHABET);
+	lua_settable(L, -3);
+	
+	lua_pushliteral(L, "scrabble");
+	lua_pushliteral(L, GNIGGLE_SCRABBLE);
+	lua_settable(L, -3);
+	
+	lua_pushliteral(L, "boggle");
+	lua_pushliteral(L, GNIGGLE_BOGGLE);
+	lua_settable(L, -3);
 	
 	return 1;
 }
