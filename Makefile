@@ -11,7 +11,7 @@ default:
 
 core: libgniggle.a
 
-clean: clean-cli
+clean: clean-cli clean-lua
 	rm -rf libgniggle.a game.o solve.o dictionary.o generate.o
 
 libgniggle.a: game.o solve.o dictionary.o generate.o
