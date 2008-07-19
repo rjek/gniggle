@@ -154,27 +154,27 @@ static int l_gniggle_dict_size(lua_State *L)
 
 static int l_gniggle_dict_iter(lua_State *L)
 {
-	return 0;
+	return luaL_error("dict_iter is unimplemented!");
 }
 
 static int l_gniggle_dict_next(lua_State *L)
 {
-	return 0;
+	return luaL_error("dict_iter is unimplemented!");
 }
 
 static int l_gniggle_dict_iter_delete(lua_State *L)
 {
-	return 0;
+	return luaL_error("dict_iter is unimplemented!");
 }
 
 static int l_gniggle_dict_dump(lua_State *L)
 {
-	return 0;
+	return luaL_error("dict_iter is unimplemented!");
 }
 
 static int l_gniggle_dict_undump(lua_State *L)
 {
-	return 0;
+	return luaL_error("dict_iter is unimplemented!");
 }
 
 /* Lua interface entry points */
