@@ -32,6 +32,8 @@
 
 /* dictionary functions */
 
+#define DICT_META_NAME "gniggledict"
+
 static int l_gniggle_dict_trim_qu(lua_State *L)
 {
 	const unsigned char *in = luaL_checkstring(L, 1);
@@ -66,37 +68,88 @@ static int l_gniggle_dict_word_qualifies(lua_State *L)
 
 static int l_gniggle_dict_new(lua_State *L)
 {
+	const int sx = luaL_checknumber(L, 1);
+	const int sy = luaL_checknumber(L, 2);
+	const int sh = luaL_checknumber(L, 3);
+	
+	struct gniggle_dictionary **p = lua_newuserdata(L,
+		sizeof(struct gniggle_dictionary *));
+	
+	*p = gniggle_dictionary_new(sx, sy, sh);
+	
+	luaL_getmetatable(L, DICT_META_NAME);
+	lua_setmetatable(L, -2);
+	
+	return 1;
+}
+
+static int l_gniggle_dict_gc(lua_State *L)
+{
+	struct gniggle_dictionary **p = luaL_checkudata(L, 1, DICT_META_NAME);
+	
+	gniggle_dictionary_delete(*p);
+	
 	return 0;
 }
 
 static int l_gniggle_dict_load_file(lua_State *L)
 {
-	return 0;
+	struct gniggle_dictionary **p = luaL_checkudata(L, 1, DICT_META_NAME);
+	const char *fn = luaL_checkstring(L, 2);
+	
+	lua_pushnumber(L, gniggle_dictionary_load_file(*p, fn));
+	
+	return 1;
 }
 
 static int l_gniggle_dict_new_from_file(lua_State *L)
 {
-	return 0;
-}
-
-static int l_gniggle_dict_delete(lua_State *L)
-{
-	return 0;
+	const int sx = luaL_checknumber(L, 1);
+	const int sy = luaL_checknumber(L, 2);
+	const int sh = luaL_checknumber(L, 3);
+	const char *fn = luaL_checkstring(L, 4);
+	
+	struct gniggle_dictionary **p = lua_newuserdata(L,
+		sizeof(struct gniggle_dictionary *));
+	
+	*p = gniggle_dictionary_new_from_file(sx, sy, sh, fn);
+	
+	if (*p == NULL)
+		return luaL_error(L, "Unable to load dictionary %s!", fn);
+	
+	luaL_getmetatable(L, DICT_META_NAME);
+	lua_setmetatable(L, -2);
+	
+	return 1;
 }
 
 static int l_gniggle_dict_add(lua_State *L)
 {
+	struct gniggle_dictionary **p = luaL_checkudata(L, 1, DICT_META_NAME);
+	const char *w = luaL_checkstring(L, 2);
+	
+	gniggle_dictionary_add(*p, w);
+	
 	return 0;
 }
 
 static int l_gniggle_dict_lookup(lua_State *L)
 {
-	return 0;
+	struct gniggle_dictionary **p = luaL_checkudata(L, 1, DICT_META_NAME);
+	const char *w = luaL_checkstring(L, 2);
+	
+	lua_pushboolean(L, gniggle_dictionary_lookup(*p, w));
+	
+	return 1;
 }
 
 static int l_gniggle_dict_size(lua_State *L)
 {
-	return 0;
+	struct gniggle_dictionary **p = luaL_checkudata(L, 1, DICT_META_NAME);
+	
+	lua_pushnumber(L, gniggle_dictionary_size(*p));
+	
+	return 1;
 }
 
 static int l_gniggle_dict_iter(lua_State *L)
@@ -133,13 +186,12 @@ static const struct luaL_Reg gniggle[] = {
 	{ "dict_new", 		l_gniggle_dict_new },
 	{ "dict_load_file", 	l_gniggle_dict_load_file },
 	{ "dict_new_from_file", l_gniggle_dict_new_from_file },
-	{ "dict_delete", 	l_gniggle_dict_delete },
 	{ "dict_add", 		l_gniggle_dict_add },
 	{ "dict_lookup", 	l_gniggle_dict_lookup },
 	{ "dict_size", 		l_gniggle_dict_size },
 	{ "dict_iter", 		l_gniggle_dict_iter },
 	{ "dict_next", 		l_gniggle_dict_next },
-	{ "dict_iter_delete", 	l_gniggle_dict_delete },
+	{ "dict_iter_delete", 	l_gniggle_dict_iter_delete },
 	{ "dict_dump", 		l_gniggle_dict_dump },
 	{ "dict_undump", 	l_gniggle_dict_undump },
 	
@@ -149,5 +201,13 @@ static const struct luaL_Reg gniggle[] = {
 int luaopen_luagniggle(lua_State *L)
 {
 	luaL_register(L, "gniggle", gniggle);
+	
+	luaL_newmetatable(L, DICT_META_NAME);
+	lua_pushliteral(L, "__gc");
+	lua_pushcclosure(L, l_gniggle_dict_gc, 0);
+	lua_settable(L, -3);
+	
+	lua_pop(L, 1);
+	
 	return 1;
 }
