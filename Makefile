@@ -1,4 +1,4 @@
-CFLAGS=-g
+CFLAGS=-std=c99 -O2 -Wall -Wextra -ansi -pedantic -fPIC
 
 default:
 	@echo "usage: make [target]"

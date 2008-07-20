@@ -29,13 +29,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-//#ifdef _POSIX_VER
+/*#ifdef _POSIX_VER */
 /* TODO: make this work :) */
 	#include <stdlib.h>
 	#include <time.h>
 	#define GNIGGLE_RAND_SEED srand(((unsigned int)time(NULL)))
 	#define GNIGGLE_RAND(min,max) (rand() % ((max) + 1))
-//#endif
+/*#endif*/
 
 #ifndef GNIGGLE_RAND_SEED
 	#error GNIGGLE_RAND_SEED not defined, unable to generate random games

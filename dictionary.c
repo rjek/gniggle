@@ -51,7 +51,7 @@ struct gniggle_dictionary_iter {
 	struct gniggle_dictionary_hash_e *entry; /* last hash entry */	
 };
 
-inline unsigned char *gniggle_dictionary_trim_qu(const unsigned char *word)
+unsigned char *gniggle_dictionary_trim_qu(const unsigned char *word)
 {
 	int i, len = strlen(word);
 	unsigned char *r = calloc(len + 1, 1);
@@ -66,7 +66,7 @@ inline unsigned char *gniggle_dictionary_trim_qu(const unsigned char *word)
 	return r;
 }
 
-inline unsigned char *gniggle_dictionary_restore_qu(const unsigned char *word)
+unsigned char *gniggle_dictionary_restore_qu(const unsigned char *word)
 {
 	int qs = 0, i;
 	unsigned char *r;
@@ -134,7 +134,7 @@ bool gniggle_dictionary_word_qualifies(const unsigned char *word,
 	return true;	
 }
 
-static inline unsigned int gniggle_dictionary_fnv(const unsigned char *word)
+unsigned int gniggle_dictionary_fnv(const unsigned char *word)
 {
 	unsigned int z = 0x01000193;
 
