@@ -28,11 +28,11 @@
 #include <stdbool.h>
 #include <string.h>
 
-unsigned char *gniggle_generate_simple(const unsigned char *distribution,
-					unsigned int width,
-					unsigned int height)
+char *gniggle_generate_simple(const char *distribution,
+				unsigned int width,
+				unsigned int height)
 {
-	unsigned char *r = calloc((width * height) + 1, 1);
+	char *r = calloc((width * height) + 1, 1);
 	unsigned int i, l = (unsigned int)strlen(distribution) - 1;
 	
 	GNIGGLE_RAND_SEED;
@@ -61,9 +61,9 @@ static char *gniggle_boggle_deluxe_cubes[] = {
 	"fiprsy", "gorrvw", "hiprry", "nootuw", "ooottu"
 };
 
-unsigned char *gniggle_generate_real(unsigned int width, unsigned int height)
+char *gniggle_generate_real(unsigned int width, unsigned int height)
 {
-	unsigned char *r;
+	char *r;
 	int i;
 	bool used[25];
 	char **cubes;

@@ -39,9 +39,9 @@ typedef enum {
 struct gniggle_game {
 	unsigned int width;
 	unsigned int height;
-	unsigned char *grid;
+	char *grid;
 	unsigned int score;
-	const unsigned char **answers;
+	const char **answers;
 	struct gniggle_dictionary *dict;
 	struct gniggle_dictionary *found;
 };
@@ -54,14 +54,14 @@ struct gniggle_game {
  *				two, multipled by two. (3 = 1, 4 = 4, 5 = 6)
  */
 unsigned int gniggle_game_word_score(gniggle_score_style style,
-					const unsigned char *word);
+					const char *word);
 
 /* create a new game.  If generate is false, type is a string for the grid,
  * left to right, top to bottom.  If it is true, a random game is generated,
  * where type is used to select one of the letter distributions defined in
  * generate.h, or NULL to emulate a real Boggle dice set.
  */
-struct gniggle_game *gniggle_game_new(bool generate, const unsigned char *type,
+struct gniggle_game *gniggle_game_new(bool generate, const char *type,
 					unsigned int width,
 					unsigned int height,
 					struct gniggle_dictionary *dict);
@@ -72,12 +72,12 @@ void gniggle_game_delete(struct gniggle_game *game);
 /* returns a string array with all valid words for this game.  It is the
  * caller's responsibility to free this.
  */
-const unsigned char **gniggle_game_get_answers(struct gniggle_game *game);
+const char **gniggle_game_get_answers(struct gniggle_game *game);
 
 /* add a word to the list of words found by the user.  It returns the word's
  * score, zero if the word is not on the board, -1 if the word has already
  * been guessed, or -2 if the word is not in the dictionary.
  */
 int gniggle_game_try_word(struct gniggle_game *game,
-					const unsigned char *word);
+					const char *word);
 #endif /* __GAME_H__ */

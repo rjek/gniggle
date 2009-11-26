@@ -32,16 +32,15 @@ struct gniggle_dictionary;
 struct gniggle_dictionary_iter;
 
 /* returns a new string where any letters following Qs have been removed */
-unsigned char *gniggle_dictionary_trim_qu(const unsigned char *word);
+char *gniggle_dictionary_trim_qu(const char *word);
 
 /* returns a new string where any Qs are replaced with QU */
-unsigned char *gniggle_dictionary_restore_qu(const unsigned char *word);
+char *gniggle_dictionary_restore_qu(const char *word);
 
 /* returns true if a word can be considered a legal play should the letters
  * be available
  */
-bool gniggle_dictionary_word_qualifies(const unsigned char *word, 
-					const int maxlen);
+bool gniggle_dictionary_word_qualifies(const char *word, const int maxlen);
 
 /* create a new dictionary for a grid of x by y.  You can also select a hash
  * size for the number of buckets to use.  Using zero here uses a largish
@@ -76,13 +75,13 @@ void gniggle_dictionary_delete(struct gniggle_dictionary *dict);
  * any "qu" will be trimmed to just "q" before being added.
  */
 void gniggle_dictionary_add(struct gniggle_dictionary *dict,
-				const unsigned char *word);
+				const char *word);
 				
 /* returns true if 'word' is in dictionary.  The word must be lower case,
  * and already have any "qu" converted to just "q".
  */
 bool gniggle_dictionary_lookup(struct gniggle_dictionary *dict,
-				const unsigned char *word);
+				const char *word);
 
 /* returns the number of words in a dictionary */
 unsigned int gniggle_dictionary_size(struct gniggle_dictionary *dict);
@@ -96,8 +95,7 @@ struct gniggle_dictionary_iter *gniggle_dictionary_iterator(
 /* returns the next word from the dictionary via an iterator, or NULL if there
  * are no more words.  Words are returned in hash order, and are unsorted.
  */				
-const unsigned char *gniggle_dictionary_next(
-				struct gniggle_dictionary_iter *iter);
+const char *gniggle_dictionary_next(struct gniggle_dictionary_iter *iter);
 
 /* deletes an iterator from memory once you are done with it */
 void gniggle_dictionary_iterator_delete(struct gniggle_dictionary_iter *iter);

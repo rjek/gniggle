@@ -30,9 +30,9 @@
 #include "solve.h"
 
 unsigned int gniggle_game_word_score(gniggle_score_style style,
-					const unsigned char *word)
+					const char *word)
 {
-	int l = strlen(word), i;
+	size_t l = strlen(word), i;
 	
 	/* count the number of Qs in this string, as they class as two
 	 * letters.
@@ -64,7 +64,7 @@ unsigned int gniggle_game_word_score(gniggle_score_style style,
 	return 0;
 }
 
-struct gniggle_game *gniggle_game_new(bool generate, const unsigned char *type,
+struct gniggle_game *gniggle_game_new(bool generate, const char *type,
 					unsigned int width,
 					unsigned int height,
 					struct gniggle_dictionary *dict)
@@ -96,7 +96,6 @@ void gniggle_game_delete(struct gniggle_game *game)
 	free(game->grid);
 	free(game->answers);
 	gniggle_dictionary_delete(game->found);
-	
 	free(game);
 }
 
@@ -105,14 +104,14 @@ static int gniggle_game_answers_sort(const void *p1, const void *p2)
 	return strcmp(* (char * const *) p1, * (char * const *) p2);
 }
 
-const unsigned char **gniggle_game_get_answers(struct gniggle_game *game)
+const char **gniggle_game_get_answers(struct gniggle_game *game)
 {
 	/* we allocate enough space for 64 words, including the sentinal.
 	 * we can extend this if there are more words.
 	 */
-	const unsigned char **r = calloc(sizeof(char *), 64);
+	const char **r = calloc(sizeof(char *), 64);
 	struct gniggle_dictionary_iter *iter;
-	const unsigned char *word;
+	const char *word;
 	unsigned int room = 63, found = 0;
 	
 	iter = gniggle_dictionary_iterator(game->dict);
@@ -142,9 +141,9 @@ const unsigned char **gniggle_game_get_answers(struct gniggle_game *game)
 }
 
 int gniggle_game_try_word(struct gniggle_game *game,
-					const unsigned char *word) {
+					const char *word) {
 					
-	unsigned char *nqu = gniggle_dictionary_trim_qu(word);
+	char *nqu = gniggle_dictionary_trim_qu(word);
 	unsigned int score;
 	
 	if (gniggle_solve_word_on_grid(nqu, game->grid, game->width,
@@ -180,7 +179,7 @@ int main(int argc, char *argv[])
 {
 	struct gniggle_dictionary *d;
 	struct gniggle_game *g;
-	unsigned char word[BUFSIZ];
+	char word[BUFSIZ];
 	const unsigned char **answers;
 	int i, score = 0, wscore, j;
 	unsigned int path[64];

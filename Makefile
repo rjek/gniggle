@@ -1,4 +1,4 @@
-CFLAGS=-std=c99 -O2 -Wall -Wextra -ansi -pedantic -fPIC
+CFLAGS=-std=c99 -O2 -Wall -Wextra -ansi -pedantic -fPIC -D_GNU_SOURCE
 
 default:
 	@echo "usage: make [target]"

@@ -58,14 +58,14 @@
  *                   still produce boards that are impossible in real Boggle.
  *   SNIGGLE_SCRABBLE: distribution found in Scrabble.
  */
-unsigned char *gniggle_generate_simple(const unsigned char *distribution,
-					unsigned int width,
-					unsigned int height);
+char *gniggle_generate_simple(const char *distribution,
+				unsigned int width,
+				unsigned int height);
 
 /* generate a cube by emulating a real set of Boggle dice.  width * heigh
  * must equal either 16 (for original Boggle) or 25 (for Boggle Deluxe), or
  * NULL will be returned.
  */
-unsigned char *gniggle_generate_real(unsigned int width, unsigned int height);
+char *gniggle_generate_real(unsigned int width, unsigned int height);
 
 #endif /* __GENERATE_H__ */

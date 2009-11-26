@@ -33,7 +33,7 @@
 #include "dictionary.h"
 
 struct gniggle_dictionary_hash_e {
-	unsigned char *word;
+	char *word;
 	struct gniggle_dictionary_hash_e *next;
 };
 
@@ -51,11 +51,11 @@ struct gniggle_dictionary_iter {
 	struct gniggle_dictionary_hash_e *entry; /* last hash entry */	
 };
 
-unsigned char *gniggle_dictionary_trim_qu(const unsigned char *word)
+char *gniggle_dictionary_trim_qu(const char *word)
 {
-	int i, len = strlen(word);
-	unsigned char *r = calloc(len + 1, 1);
-	unsigned char *p = r;
+	size_t i, len = strlen(word);
+	char *r = calloc(len + 1, 1);
+	char *p = r;
 	
 	for (i = 0; i < strlen(word); i++) {
 		*p++ = word[i];
@@ -66,23 +66,23 @@ unsigned char *gniggle_dictionary_trim_qu(const unsigned char *word)
 	return r;
 }
 
-unsigned char *gniggle_dictionary_restore_qu(const unsigned char *word)
+char *gniggle_dictionary_restore_qu(const char *word)
 {
-	int qs = 0, i;
-	unsigned char *r;
-	unsigned char *b;
+	size_t qs = 0, i;
+	char *r;
+	char *b;
 	
-	for (i = 0; i < strlen((char *)word); i++)
+	for (i = 0; i < strlen(word); i++)
 		if (word[i] == 'q')
 			qs++;
 	
 	if (qs == 0)
-		return strdup((char *)word);
+		return strdup(word);
 	
-	r = calloc(strlen((char *)word) + qs + 1, 1);
+	r = calloc(strlen(word) + qs + 1, 1);
 	
 	b = r;
-	for (i = 0; i < strlen((char *)word); i++) {
+	for (i = 0; i < strlen(word); i++) {
 		*b = word[i];
 		if (*b == 'q') {
 			*(b + 1) = 'u';
@@ -94,11 +94,11 @@ unsigned char *gniggle_dictionary_restore_qu(const unsigned char *word)
 	return r;
 }
 
-bool gniggle_dictionary_word_qualifies(const unsigned char *word, 
+bool gniggle_dictionary_word_qualifies(const char *word, 
 					const int maxlen)
 {
-	unsigned char *qu;
-	int i, len = strlen((char *)word);
+	char *qu;
+	int i, len = strlen(word);
 	
 	/* Word is at least three characters long */
 	if (len < 3)
@@ -134,7 +134,7 @@ bool gniggle_dictionary_word_qualifies(const unsigned char *word,
 	return true;	
 }
 
-unsigned int gniggle_dictionary_fnv(const unsigned char *word)
+unsigned int gniggle_dictionary_fnv(const char *word)
 {
 	unsigned int z = 0x01000193;
 
@@ -183,9 +183,9 @@ void gniggle_dictionary_delete(struct gniggle_dictionary *dict)
 }
 
 void gniggle_dictionary_add(struct gniggle_dictionary *dict,
-				const unsigned char *word)
+				const char *word)
 {
-	unsigned char *nqu;
+	char *nqu;
 	
 	if (gniggle_dictionary_word_qualifies(word, dict->gx * dict->gy)
 		== false)
@@ -209,7 +209,7 @@ void gniggle_dictionary_add(struct gniggle_dictionary *dict,
 }
 				
 bool gniggle_dictionary_lookup(struct gniggle_dictionary *dict,
-				const unsigned char *word)
+				const char *word)
 {
 	unsigned int hash = gniggle_dictionary_fnv(word);
 	unsigned int bucket = hash % (dict->hashsize);
@@ -217,7 +217,7 @@ bool gniggle_dictionary_lookup(struct gniggle_dictionary *dict,
 	struct gniggle_dictionary_hash_e *e = dict->hash[bucket];
 	
 	while (e != NULL) {
-		if (strcmp((char *)word, (char *)e->word) == 0)
+		if (strcmp(word, e->word) == 0)
 			return true;
 		e = e->next;
 	}
@@ -243,10 +243,9 @@ struct gniggle_dictionary_iter *gniggle_dictionary_iterator(
 	return r;
 }
 			
-const unsigned char *gniggle_dictionary_next(
-				struct gniggle_dictionary_iter *iter)
+const char *gniggle_dictionary_next(struct gniggle_dictionary_iter *iter)
 {
-	const unsigned char *r;
+	const char *r;
 	while (iter->entry == NULL) {
 		iter->bucket += 1;
 		if (iter->bucket == iter->dict->hashsize)
@@ -269,7 +268,7 @@ int gniggle_dictionary_dump(struct gniggle_dictionary *dict,
 {
   	gzFile fh = gzopen(filename, "wb");
 #	define WRITE(d, s) gzwrite(fh, (d), (s))
-	int l;
+	size_t l;
 	uint32_t magic = 0x12345678;
 	unsigned char fl;
 
@@ -316,6 +315,8 @@ int gniggle_dictionary_dump(struct gniggle_dictionary *dict,
 	}
 	gzclose(fh);
 #undef WRITE
+
+	return 0;
 }
 
 struct gniggle_dictionary *gniggle_dictionary_undump(const unsigned x,
@@ -325,8 +326,8 @@ struct gniggle_dictionary *gniggle_dictionary_undump(const unsigned x,
 #	define READ(p, s) gzread(fh, (p), (s))
 	uint32_t magic;
 	unsigned char fl;
-	unsigned char head[8];
-	int l;
+	char head[8];
+	size_t l;
 
 	struct gniggle_dictionary *d;
 
@@ -402,7 +403,10 @@ struct gniggle_dictionary *gniggle_dictionary_new_from_file(
 	if (fh == NULL)
 		return NULL;
 
-	fread(head, 2, 1, fh);
+	if (fread(head, 2, 1, fh) < 1) {
+		fclose(fh);
+		return NULL;
+	}
 	fclose(fh);
 
 	if (head[0] == 0x1f && head[1] == 0x8b) {	/* gzip header? */
@@ -422,14 +426,15 @@ int gniggle_dictionary_load_file(struct gniggle_dictionary *dict,
 					const char *filename)
 {
 	FILE *fh = fopen(filename, "r");
-	unsigned char word[BUFSIZ];
+	char word[BUFSIZ];
 	int count = 0;
 	
 	if (fh == NULL)
 		return -1;
 	
 	while (!feof(fh)) {
-		fscanf(fh, "%s", word);
+		if (fscanf(fh, "%s", word) < 1)
+			break;
 		gniggle_dictionary_add(dict, word);
 		count++;
 	}
@@ -447,7 +452,7 @@ int main(int argc, char *argv[])
 	struct gniggle_dictionary *dict = gniggle_dictionary_new(10, 10, 0);
 	struct gniggle_dictionary_iter *iter;
 	unsigned char word[BUFSIZ];
-	const unsigned char *iterword;
+	const char *iterword;
 	
 	FILE *d = fopen("./word.list", "r");
 	

@@ -51,6 +51,7 @@ static int cube_index(
 		const unsigned int rotation) {
 	switch (rotation) {
 	case 0:
+	default:
 		return (yy * width) + xx;
 	case 1:
 		return (height * (width - xx - 1)) + yy;
@@ -61,7 +62,7 @@ static int cube_index(
 	}
 }
 
-static void show_cube(const unsigned char *grid, unsigned int x, unsigned int y,
+static void show_cube(const char *grid, unsigned int x, unsigned int y,
 			unsigned int rotation)
 {
 	unsigned int xx, yy, zz;
@@ -98,15 +99,14 @@ int main(int argc, char *argv[])
 {
 	unsigned int width = 4, height = 4;
 	unsigned int rotation = 0;
-	unsigned char *dump = NULL, *grid = NULL, *dictionary = NULL;
-	unsigned char word[BUFSIZ];
+	char *dump = NULL, *grid = NULL, *dictionary = NULL;
+	char word[BUFSIZ];
 	int a, w = 0;
 	struct gniggle_game *g;
 	struct gniggle_dictionary *d;
 	bool quit = false;
 	unsigned int score = 0, mscore = 0;
-	const unsigned char **answers;
-	FILE *f;
+	const char **answers;
 	
 	if (argc > 1) {
 		for (a = 1; a < argc; a++) {
@@ -189,7 +189,12 @@ int main(int argc, char *argv[])
 	
 	do {
 		printf("(%d) :", score); fflush(stdout);
-		fgets(word, BUFSIZ, stdin);
+		if (fgets(word, BUFSIZ, stdin) == NULL)
+		{
+			printf("Error reading from stdin.\n");
+			exit(EXIT_FAILURE);
+		}
+
 		if (word[strlen(word) - 1] == '\n')
 			word[strlen(word) - 1] = '\0';
 			
@@ -201,7 +206,7 @@ int main(int argc, char *argv[])
 			rotation = (rotation + 1) % 4;
 			show_cube(grid, width, height, rotation);
 		} else {
-			int ll;
+			size_t ll;
 		  	int wscore;
 			
 			for (ll = 0; ll < strlen(word); ll++)
@@ -238,8 +243,8 @@ int main(int argc, char *argv[])
 		else {
 			if (gniggle_dictionary_lookup(g->found, answers[a])
 				== false) {
-				unsigned char *qu =
-				     gniggle_dictionary_restore_qu(answers[a]);
+				char *qu =
+					gniggle_dictionary_restore_qu(answers[a]);
 				printf("%s\t\t", qu);
 				free(qu);
 				mscore += gniggle_game_word_score(
@@ -257,5 +262,5 @@ int main(int argc, char *argv[])
 	printf("\nYour score: %d.  You missed out on %d point%s.\n",
 			score, mscore, mscore == 1 ? "" : "s");
 		
-				
+	exit(EXIT_SUCCESS);
 }
