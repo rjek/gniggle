@@ -98,7 +98,7 @@ char *gniggle_generate_real(unsigned int width, unsigned int height)
 		
 		used[c] = true;
 		
-		r[i] = gniggle_boggle_cubes[c][GNIGGLE_RAND(0, 5)];
+		r[i] = cubes[c][GNIGGLE_RAND(0, 5)];
 	}
 	
 	return r;
