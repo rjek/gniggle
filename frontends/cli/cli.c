@@ -169,6 +169,8 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
+	free(dictionary);
+
 	printf("%d words.\n", gniggle_dictionary_size(d));
 
 	if (dump != NULL) {
@@ -261,6 +263,10 @@ int main(int argc, char *argv[])
 	
 	printf("\nYour score: %d.  You missed out on %d point%s.\n",
 			score, mscore, mscore == 1 ? "" : "s");
-		
+
+	gniggle_game_delete(g);
+	gniggle_dictionary_delete(d);
+	free(grid);
+
 	exit(EXIT_SUCCESS);
 }
